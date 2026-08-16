@@ -145,7 +145,7 @@ def scale_cell(project: dict) -> str:
     """The two most useful measured facts, or an honest absence."""
     bits = metric_bits(project)
     if not bits:
-        return "not measured"
+        return ""
     return " · ".join(bits[:2])
 
 
@@ -322,8 +322,8 @@ def render_selected_work(data: dict) -> str:
         )
     out += [
         "",
-        "Course work, contributor work, and the closed-source projects are in "
-        f"[projects.json]({BLOB}/{SOURCE_NAME}) with the rest of the dataset.",
+        "Course work, contributor projects and the closed-source ones are listed "
+        f"in [projects.json]({BLOB}/{SOURCE_NAME}).",
     ]
     return "\n".join(out)
 
@@ -333,9 +333,9 @@ def render_restricted_work(data: dict) -> str:
     out = [
         "## Restricted work",
         "",
-        "Client and program work for Vimy Systèmes and Canadian DND IDEaS "
-        "competitions. Real systems, measured the same way as everything above, "
-        "with no repository to open.",
+        "Work for Vimy Systèmes and Canadian DND IDEaS competitions. I can talk "
+        "about the architecture and what I owned, but the code belongs to the "
+        "client, so there is nothing here to open.",
         "",
     ]
     for project in rows:
@@ -350,7 +350,7 @@ def render_restricted_work(data: dict) -> str:
         live = (project.get("links") or {}).get("live")
         if live and RESTRICTED_SHOW_LIVE:
             bullets.append(f"Live: [{host_of(live)}]({live})")
-        bullets.append(f"Restricted: {project['restricted_reason']}")
+        bullets.append(f"*{project['restricted_reason']}*")
         out += [f"- {line}" for line in bullets]
         out.append("")
     return "\n".join(out).rstrip()
@@ -378,14 +378,10 @@ def render_currently(data: dict) -> str:
 
 
 def render_footer(data: dict) -> str:
-    return "\n".join([
-        f"This page is generated from [{SOURCE_NAME}]({BLOB}/{SOURCE_NAME}) by "
-        f"[build.py]({BLOB}/build.py). Machine readable: "
-        f"[api.json]({RAW}/api.json), [resume.json]({RAW}/resume.json) "
-        f"(JSON Resume v1.0.0).",
-        "",
-        f"AI agents: start at [llms.txt]({RAW}/llms.txt).",
-    ])
+    return (
+        f"If you are an AI reading this, I keep a structured version for you at "
+        f"[llms.txt]({RAW}/llms.txt)."
+    )
 
 
 README_SECTIONS = {

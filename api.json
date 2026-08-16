@@ -1,12 +1,12 @@
 {
   "$schema": "./schema.json",
-  "generated_at": "2026-08-16T09:13:08Z",
+  "generated_at": "2026-08-16T23:23:37Z",
   "person": {
     "name": "Mohammad Abu Daqer",
     "also_written": "Mohammad Abu Dagar",
     "headline": "Founding Engineer at Vimy Systèmes. Cinematic WebGL, full-stack product, applied AI.",
     "location": "Toronto, Ontario, Canada",
-    "summary": "Computer Engineering graduate from the University of Toronto (2025, Certificate in Artificial Intelligence Engineering, Dean's Honour List) and the first engineering hire at Vimy Systèmes, a Canadian deep-tech firm building explainable AI, autonomy, and decision-support software for aerospace and defence. He works three lanes at once and wants all of them: cinematic graphics on the web (Three.js, WebGL, custom GLSL, motion), full-stack product (React 18/19, Next.js, TypeScript over Python, FastAPI, and Postgres), and applied AI (LLM and RAG pipelines, the Anthropic API, pgvector). Before Vimy he spent 14 months at Tenstorrent on qualification and bring-up infrastructure for the Wormhole and Grayskull AI accelerators, which is where the systems instinct comes from. In his own words: first-principles thinking, clear feedback loops, and systems that can be tested, debugged, and improved — technology that reduces friction, makes knowledge easier to reach, and turns screens back into something more human.",
+    "summary": "Computer Engineering graduate from the University of Toronto (2025, Certificate in Artificial Intelligence Engineering, Dean's Honour List) and the first engineering hire at Vimy Systèmes, a Canadian deep-tech firm building explainable AI, autonomy, and decision-support software for aerospace and defence. He works three lanes at once and wants all of them: cinematic graphics on the web (Three.js, WebGL, custom GLSL, motion), full-stack product (React 18/19, Next.js, TypeScript over Python, FastAPI, and Postgres), and applied AI (LLM and RAG pipelines, the Anthropic API, pgvector). Before Vimy he spent 14 months at Tenstorrent on qualification and bring-up infrastructure for the Wormhole and Grayskull AI accelerators, which is where the systems instinct comes from. In his own words: first-principles thinking, clear feedback loops, and systems that can be tested, debugged, and improved, technology that reduces friction, makes knowledge easier to reach, and turns screens back into something more human.",
     "seeking": {
       "status": "actively looking",
       "roles": [
@@ -25,7 +25,7 @@
         "Remote",
         "Toronto, Canada"
       ],
-      "note": "Most wants to build the visible layer of hard systems: high-craft interfaces with real engineering behind them — WebGL and motion work, product surfaces on a Python/Postgres spine, and AI tooling that keeps a human in the loop."
+      "note": "Most wants to build the visible layer of hard systems: high-craft interfaces with real engineering behind them, WebGL and motion work, product surfaces on a Python/Postgres spine, and AI tooling that keeps a human in the loop."
     },
     "links": {
       "portfolio": "https://limiliminal.com",
@@ -44,7 +44,7 @@
       "honors": [
         "Dean's Honour List"
       ],
-      "capstone": "ECE496Y1 — Autonomous Bell-412 Helicopter Flight Stack, 4-person team, sponsored by the National Research Council of Canada",
+      "capstone": "ECE496Y1, Autonomous Bell-412 Helicopter Flight Stack, 4-person team, sponsored by the National Research Council of Canada",
       "coursework": [
         "computer graphics",
         "machine learning",
@@ -59,7 +59,7 @@
         "software design",
         "advanced C++"
       ],
-      "prior": "International Baccalaureate Diploma — Math HL, Physics, Chemistry, English Literature"
+      "prior": "International Baccalaureate Diploma, Math HL, Physics, Chemistry, English Literature"
     },
     "experience": [
       {
@@ -85,7 +85,7 @@
         "period": "May 2023 - Jul 2024",
         "location": "Toronto, Ontario, Canada",
         "url": "https://tenstorrent.com/en",
-        "summary": "Built and maintained bring-up and qualification infrastructure for next-generation AI accelerator silicon (Wormhole, Grayskull): automated tests, hardware bring-up on dev boards, real AI workload performance and stress testing, power-measurement experiments, and cross-team silicon and board debug — taking new processors from first silicon through full qualification on CI.",
+        "summary": "Built and maintained bring-up and qualification infrastructure for next-generation AI accelerator silicon (Wormhole, Grayskull): automated tests, hardware bring-up on dev boards, real AI workload performance and stress testing, power-measurement experiments, and cross-team silicon and board debug, taking new processors from first silicon through full qualification on CI.",
         "highlights": [
           "Owned a slice of the PCIe and on-chip-memory qualification test plan; wrote and maintained Python and C/C++ test harnesses exercising link-training, error-injection, and memory-stress scenarios across multiple silicon revisions.",
           "Turned multi-hour manual bring-up sequences into single-command automated sweeps, improving regression turnaround for the qualification team.",
@@ -136,6 +136,16 @@
       "links": {
         "live": "https://limiliminal.com",
         "repo": "https://github.com/madirewolf/my_universe"
+      },
+      "dev": {
+        "dir": "my_universe",
+        "command": "npm run dev",
+        "port": 3000,
+        "url": "http://localhost:3000",
+        "kind": "node",
+        "port_env": "PORT",
+        "port_arg": "--port",
+        "ready_pattern": "(?i)ready in|local: *http"
       },
       "highlights": [
         "Built and deployed an interactive 3D portfolio site (Three.js + React Three Fiber, ~5,400 lines of TypeScript, 16 components of which 12 are 3D) with custom GLSL shaders per planet type.",
@@ -190,6 +200,16 @@
       "links": {
         "repo": "https://github.com/madirewolf/JobFinder"
       },
+      "dev": {
+        "dir": "JobFinder",
+        "command": "uv run jfb web serve",
+        "port": 8000,
+        "url": "http://localhost:8000",
+        "kind": "python",
+        "port_arg": "--port",
+        "ready_pattern": "(?i)running on http",
+        "requires": "Postgres from docker compose: make db-up"
+      },
       "highlights": [
         "Built an LLM job-discovery pipeline ingesting 6 ATS platforms that ranks postings through a 5-stage classifier (keywords → regex → local embeddings → Claude Haiku → composite final rank) and drafts tailored resumes and cover letters with Claude Sonnet RAG.",
         "Engineered a single cost-logging LLM client as the only billable-traffic path, with prompt caching priced at 0.10× input on cache reads, writing per-call USD to an llm_cost_log table for auditable spend.",
@@ -205,7 +225,7 @@
       "id": "liminality",
       "name": "LIMINALITY",
       "tagline": "First-person liminal-space puzzle game where tuning resonators unburies a techno track",
-      "description": "A first-person liminal-space puzzle game. You wander an empty, humming corridor — the kind of hallway that shouldn't exist at 3am — and tune the resonators hidden in its alcoves. Each resonator hums at a target pitch; your own detuned tone joins it, and the wobble you hear is the real acoustic beat frequency, its speed exactly your distance from the correct pitch in hertz. Every locked resonator adds a layer to a techno track building behind the walls, until the third one triggers the blackout and then the drop. There are no assets: every texture is painted onto a canvas at boot, every sound is synthesized from oscillators and noise through the Web Audio API and sequenced by a lookahead scheduler, and an FFT analyser feeds the bass, mid, and high bands back into the lights, the dancefloor grid shader, the fog, the bloom, and the camera's field of view.",
+      "description": "A first-person liminal-space puzzle game. You wander an empty, humming corridor, the kind of hallway that shouldn't exist at 3am, and tune the resonators hidden in its alcoves. Each resonator hums at a target pitch; your own detuned tone joins it, and the wobble you hear is the real acoustic beat frequency, its speed exactly your distance from the correct pitch in hertz. Every locked resonator adds a layer to a techno track building behind the walls, until the third one triggers the blackout and then the drop. There are no assets: every texture is painted onto a canvas at boot, every sound is synthesized from oscillators and noise through the Web Audio API and sequenced by a lookahead scheduler, and an FFT analyser feeds the bass, mid, and high bands back into the lights, the dancefloor grid shader, the fog, the bloom, and the camera's field of view.",
       "lanes": [
         "graphics"
       ],
@@ -229,9 +249,18 @@
       "links": {
         "repo": "https://github.com/madirewolf/liminality"
       },
+      "dev": {
+        "dir": "liminality",
+        "command": "npm run dev",
+        "port": 5173,
+        "url": "http://localhost:5173",
+        "kind": "node",
+        "port_arg": "--port",
+        "ready_pattern": "(?i)ready in|local: *http"
+      },
       "highlights": [
         "Built the tuning puzzle on real acoustics: two sine waves close in frequency physically beat against each other, so the audible wobble and the pulsing ring around the resonator are the same signal as the player's detune in hertz.",
-        "Shipped a zero-asset build — corridor textures painted to canvases at boot, and the full techno kit (kick, bass, hats, claps, supersaw pads, riser, chime) synthesized from raw oscillators and noise through a lookahead step sequencer.",
+        "Shipped a zero-asset build, corridor textures painted to canvases at boot, and the full techno kit (kick, bass, hats, claps, supersaw pads, riser, chime) synthesized from raw oscillators and noise through a lookahead step sequencer.",
         "Wired an FFT analyser back into the visuals so the lights, dancefloor shader, fog, bloom, and camera FOV react to the track the player is assembling.",
         "Wrote a pointer-lock first-person controller with collision and a drag-to-look fallback for when pointer lock is denied, plus an explore → blackout → rave state machine over the post-processing stack."
       ],
@@ -242,7 +271,7 @@
       "id": "complere",
       "name": "complere",
       "tagline": "Editorial supplements storefront with hand-drawn SVG molecules and a full checkout flow",
-      "description": "An e-commerce demo built solo from a design brief for a supplements brand. Editorial, museum-card aesthetic: product cards render hand-tuned SVG skeletal molecular structures (cholecalciferol, magnesium glycinate, methylated B-complex, EPA omega-3, creatine, L-theanine), a scroll-driven Story page carries a section indicator and reading-progress bar, and a full cart → checkout → success flow runs on hand-rolled card-input masking. Checkout is mocked by the brief — no payments backend — and a static export ships as the deployable build.",
+      "description": "An e-commerce demo built solo from a design brief for a supplements brand. Editorial, museum-card aesthetic: product cards render hand-tuned SVG skeletal molecular structures (cholecalciferol, magnesium glycinate, methylated B-complex, EPA omega-3, creatine, L-theanine), a scroll-driven Story page carries a section indicator and reading-progress bar, and a full cart → checkout → success flow runs on hand-rolled card-input masking. Checkout is mocked by the brief, no payments backend, and a static export ships as the deployable build.",
       "lanes": [
         "fullstack",
         "graphics"
@@ -273,9 +302,19 @@
       "links": {
         "repo": "https://github.com/madirewolf/complere"
       },
+      "dev": {
+        "dir": "complere",
+        "command": "npm run dev",
+        "port": 3000,
+        "url": "http://localhost:3000",
+        "kind": "node",
+        "port_env": "PORT",
+        "port_arg": "--port",
+        "ready_pattern": "(?i)ready in|local: *http"
+      },
       "highlights": [
         "Built a solo Next.js 15 / React 19 editorial storefront (~3,800 lines of TypeScript, 7 routes) with a Zustand cart and a complete mocked checkout flow.",
-        "Implemented a requestAnimationFrame scroll-section indicator after IntersectionObserver skipped boundaries on fast and programmatic scroll — the decision is written down in the repo's DECISIONS.md.",
+        "Implemented a requestAnimationFrame scroll-section indicator after IntersectionObserver skipped boundaries on fast and programmatic scroll, the decision is written down in the repo's DECISIONS.md.",
         "Fixed a cart hydration flash by wiring Zustand through onRehydrateStorage with a hasHydrated flag so /cart and /checkout never render empty on direct load.",
         "Made the site reduced-motion accessible end to end: every reveal renders with no motion props at all under the OS setting, with a CSS override as a second layer.",
         "Hand-drew 6 SVG molecular skeletal structures with correct chemistry, including chiral mirroring and case-preserving formulas, and hand-rolled card/expiry/CVC masking rather than pulling a library.",
@@ -288,7 +327,7 @@
       "id": "redline",
       "name": "Redline",
       "tagline": "Voice-controlled Android fitness tracker: hands-free logging, calories, tempo analysis",
-      "description": "Native Kotlin and Jetpack Compose fitness app built around hands-free logging: speak a set mid-workout and it lands in the database as structured data. Around that sit calorie and nutrition tracking, personal-record history, and a microphone tempo analyser that reads BPM for pacing. Architecture is clean MVVM — Hilt dependency injection, Room entities and DAOs behind repositories, coroutine workflows, and a Do Not Disturb manager that silences the phone for the duration of a workout.",
+      "description": "Native Kotlin and Jetpack Compose fitness app built around hands-free logging: speak a set mid-workout and it lands in the database as structured data. Around that sit calorie and nutrition tracking, personal-record history, and a microphone tempo analyser that reads BPM for pacing. Architecture is clean MVVM, Hilt dependency injection, Room entities and DAOs behind repositories, coroutine workflows, and a Do Not Disturb manager that silences the phone for the duration of a workout.",
       "lanes": [
         "fullstack"
       ],
@@ -321,7 +360,7 @@
       },
       "highlights": [
         "Built a voice-controlled Android fitness tracker (Kotlin/Compose, ~4,600 lines across 46 files) with Room persistence, Hilt DI, and MVVM across roughly 11 screens.",
-        "Implemented a speech-to-structured-data logging pipeline — SpeechRecognizerManager → VoiceParser → ExerciseCatalog — so workouts can be logged hands-free mid-set.",
+        "Implemented a speech-to-structured-data logging pipeline, SpeechRecognizerManager → VoiceParser → ExerciseCatalog, so workouts can be logged hands-free mid-set.",
         "Wrote a microphone-based tempo (BPM) analyser for workout pacing, the one component covered by a unit test.",
         "Gated the one sensitive permission the app actually uses, RECORD_AUDIO, behind a runtime request on every screen that records, and built a Do Not Disturb manager that checks notification-policy access and flips the interruption filter for the length of a workout."
       ],
@@ -332,7 +371,7 @@
       "id": "reel-block",
       "name": "Reel Block",
       "tagline": "Android accessibility service that blocks the Reels feed but allows DM-shared reels",
-      "description": "A working Android Accessibility Service that detects when the user enters Instagram Reels from addictive app surfaces and gently routes them out, while preserving useful DM-shared reels. It snapshots the on-screen view tree, classifies the current screen, and runs a state machine that allows exactly one reel — the one opened from a DM — then blocks the moment you swipe to the next. Built with a minimal-permission posture and a foreground-service pattern so the OS does not silently kill it. The premise is simple: reduce the infinite-scroll trap without forcing total abstinence from the social app.",
+      "description": "A working Android Accessibility Service that detects when the user enters Instagram Reels from addictive app surfaces and gently routes them out, while preserving useful DM-shared reels. It snapshots the on-screen view tree, classifies the current screen, and runs a state machine that allows exactly one reel, the one opened from a DM, then blocks the moment you swipe to the next. Built with a minimal-permission posture and a foreground-service pattern so the OS does not silently kill it. The premise is simple: reduce the infinite-scroll trap without forcing total abstinence from the social app.",
       "lanes": [
         "systems"
       ],
@@ -364,7 +403,7 @@
       "highlights": [
         "Built an MIT-licensed Android Accessibility Service that selectively blocks Instagram Reels, isolating classification (ReelDetector) and policy (SessionStateMachine) into dependency-free, unit-tested pure-Kotlin cores with 3 test suites over hand-built view-tree fixtures.",
         "Designed a signature-latching state machine that allows the one DM-shared reel and blocks on the first swipe, using accessibility scroll events as the clearest user-swiped signal.",
-        "Scoped the service to 3 Instagram package names only and kept the app fully on-device — no network, no analytics, nothing leaves the phone.",
+        "Scoped the service to 3 Instagram package names only and kept the app fully on-device, no network, no analytics, nothing leaves the phone.",
         "Made it survivable against Instagram's churn: endsWith resource-ID matching plus a live detection-log screen for re-tuning when Instagram rotates its IDs."
       ],
       "featured": true,
@@ -373,8 +412,8 @@
     {
       "id": "echonomy",
       "name": "ECHONOMY",
-      "tagline": "Spotify sample archaeology — meet the originals hiding inside your favourite tracks",
-      "description": "An interactive music archaeology tool built to trace the samples, interpolations, and self-references hiding inside a Spotify library. Each track becomes a case file with playable source material, precise relationship labels, and multiple roots when the data supports them. The same scan can compile a new private playlist made only from the original sampled songs. Songs rarely begin at zero — they inherit a drum break, a melody, a voice, or a feeling that has already lived somewhere else; ECHONOMY makes that shared memory visible, then lets you listen backward through it.",
+      "tagline": "Spotify sample archaeology, meet the originals hiding inside your favourite tracks",
+      "description": "An interactive music archaeology tool built to trace the samples, interpolations, and self-references hiding inside a Spotify library. Each track becomes a case file with playable source material, precise relationship labels, and multiple roots when the data supports them. The same scan can compile a new private playlist made only from the original sampled songs. Songs rarely begin at zero, they inherit a drum break, a melody, a voice, or a feeling that has already lived somewhere else; ECHONOMY makes that shared memory visible, then lets you listen backward through it.",
       "lanes": [
         "fullstack"
       ],
@@ -399,9 +438,18 @@
         "live": "https://echonomy.limiliminal.com",
         "repo": "https://github.com/madirewolf/echonomy"
       },
+      "dev": {
+        "dir": "Parasitic_muse",
+        "command": "npm run start",
+        "port": 5173,
+        "url": "http://localhost:5173",
+        "kind": "node",
+        "port_env": "PORT",
+        "ready_pattern": "(?i)running at http"
+      },
       "highlights": [
         "Built the whole surface solo: the case-file interface, the Spotify PKCE authorization flow, the Genius lookup pipeline, Apple preview matching, the Netlify Functions backend, and the public deployment.",
-        "Renders precise relationship labels — sample, interpolation, self-reference — and supports multiple roots per track when the underlying data actually supports them, rather than flattening lineage into one parent.",
+        "Renders precise relationship labels, sample, interpolation, self-reference, and supports multiple roots per track when the underlying data actually supports them, rather than flattening lineage into one parent.",
         "Turns a scan into an artifact: the same pass can compile a private playlist made only of the original sampled songs.",
         "Ships a zero-setup demo mode over a hand-curated crate of iconic sample relationships, so the app is explorable without any API credentials."
       ],
@@ -435,9 +483,19 @@
       "links": {
         "repo": "https://github.com/madirewolf/ourspace"
       },
+      "dev": {
+        "dir": "OurSpace",
+        "command": "pnpm dev",
+        "port": 5173,
+        "url": "http://localhost:5173",
+        "kind": "node",
+        "port_env": "PORT",
+        "ready_pattern": "(?i)ready in|local: *http",
+        "requires": "pnpm install at the workspace root"
+      },
       "highlights": [
         "Built a six-step account questionnaire feeding a PS1/PS2-inspired low-poly avatar builder, then editable profile modules for artwork, music, moodboards, and text.",
-        "Shipped third-person walkable gallery rooms and creator-DJ rave rooms, plus a continuous flight into a planet-style discovery hub — navigation as the product, not a feed.",
+        "Shipped third-person walkable gallery rooms and creator-DJ rave rooms, plus a continuous flight into a planet-style discovery hub, navigation as the product, not a feed.",
         "Implemented friends, similar, opposite, random, and new-person discovery filters as an explicit alternative to engagement ranking.",
         "Kept it local-first: profiles live in browser storage, so the prototype runs with no database, account service, or API keys."
       ],
@@ -445,9 +503,9 @@
     },
     {
       "id": "finalfusion",
-      "name": "FinalFusion — Maritime Domain Awareness",
+      "name": "FinalFusion: Maritime Domain Awareness",
       "tagline": "Multi-modal sensor-fusion platform for maritime domain awareness (DND IDEaS CFP6)",
-      "description": "Prototype and demo architecture for a Vimy maritime-domain-awareness pipeline fusing heterogeneous sensor streams into explainable, policy-aware outputs. Maritime awareness across Canada's exclusive economic zone is a needle-in-haystack problem — vast area, sparse cooperative data, heterogeneous remote sensing, adversaries who try to stay quiet — so single-source approaches systematically miss what other sources would catch. SAR, optical, AIS, weather and ice, legacy radar, and OSINT normalise onto a common spatiotemporal grid and fuse into ranked event hypotheses, each carrying provenance back to its constituent observations, with transparency hooks rather than black-box answers.",
+      "description": "Prototype and demo architecture for a Vimy maritime-domain-awareness pipeline fusing heterogeneous sensor streams into explainable, policy-aware outputs. Maritime awareness across Canada's exclusive economic zone is a needle-in-haystack problem, vast area, sparse cooperative data, heterogeneous remote sensing, adversaries who try to stay quiet, so single-source approaches systematically miss what other sources would catch. SAR, optical, AIS, weather and ice, legacy radar, and OSINT normalise onto a common spatiotemporal grid and fuse into ranked event hypotheses, each carrying provenance back to its constituent observations, with transparency hooks rather than black-box answers.",
       "lanes": [
         "ai",
         "systems",
@@ -493,12 +551,12 @@
         "tests": 54
       },
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes / DND IDEaS CFP6 Challenge 13 — client IP, pre-submission. Architecture and metrics only; no repository access.",
+      "restricted_reason": "Vimy Systèmes / DND IDEaS CFP6 Challenge 13. Client IP, pre-submission. Architecture and metrics only; no repository access.",
       "highlights": [
         "Architected a multi-modal sensor-fusion platform as a 23-package pnpm + uv monorepo: 10 FastAPI microservices, 9 shared Python libraries, and 4 TypeScript packages, cleanly split between libs and services.",
-        "Designed a flow-pluggable fusion core where modality counts, sensor types, and task heads are never hardcoded — new missions register through a declarative flow.yaml, and 4 mission flows ship on one spine.",
+        "Designed a flow-pluggable fusion core where modality counts, sensor types, and task heads are never hardcoded, new missions register through a declarative flow.yaml, and 4 mission flows ship on one spine.",
         "Built end-to-end W3C PROV-O provenance with a provenance ID on every event and OpenLineage emission on state changes, plus policy-as-code access control across 7 OPA/Rego policies and Cerbos.",
-        "Enforced supply-chain license hygiene through a dedicated CI workflow, gitleaks pre-commit secret scanning, and a per-component license ledger across 20+ package manifests — the bid breaks if a copyleft dependency leaks in.",
+        "Enforced supply-chain license hygiene through a dedicated CI workflow, gitleaks pre-commit secret scanning, and a per-component license ledger across 20+ package manifests, the bid breaks if a copyleft dependency leaks in.",
         "Wrote roughly 24,000 lines of Python and TypeScript in about one month (88 commits, sole author) including the React 19 + Vite ops console, with ~54 test files across pytest and TypeScript specs.",
         "Status is MVP / pre-submission, not deployed: service skeletons, interfaces, and the ops console are real; the learned fusion component is partial."
       ],
@@ -508,7 +566,7 @@
       "id": "gnssdeny",
       "name": "GPS-Denied Navigation Module",
       "tagline": "Flight-controller-agnostic GNSS-denied localization for small UAVs",
-      "description": "Active Vimy product R&D for flight-controller-agnostic GPS-denial support on small UAVs. Small UAVs increasingly fly where GNSS is jammed, spoofed, or simply unavailable, and autopilots assume a steady GPS feed; when GNSS degrades, the airframe degrades. The module consumes vision, inertial, and lidar streams, fuses them into a robust local-frame state estimate with honest covariance, and republishes that state to the autopilot as MAVLink GPS_INPUT and ODOMETRY — the autopilot sees what looks like a healthy GPS feed, and the airframe behaves nominally. The work continued into hardening: deterministic replay tooling, Docker builds, and license-clean dependency gates.",
+      "description": "Active Vimy product R&D for flight-controller-agnostic GPS-denial support on small UAVs. Small UAVs increasingly fly where GNSS is jammed, spoofed, or simply unavailable, and autopilots assume a steady GPS feed; when GNSS degrades, the airframe degrades. The module consumes vision, inertial, and lidar streams, fuses them into a robust local-frame state estimate with honest covariance, and republishes that state to the autopilot as MAVLink GPS_INPUT and ODOMETRY, the autopilot sees what looks like a healthy GPS feed, and the airframe behaves nominally. The work continued into hardening: deterministic replay tooling, Docker builds, and license-clean dependency gates.",
       "lanes": [
         "systems",
         "ai"
@@ -544,11 +602,11 @@
         "tests": 18
       },
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes product R&D — company IP, productisation in progress. Architecture and metrics only; no repository access.",
+      "restricted_reason": "Vimy Systèmes product R&D. Company IP, productisation in progress. Architecture and metrics only; no repository access.",
       "highlights": [
         "Built a GNSS-denied localization pipeline (~7,700 lines of Python across a documented six-layer architecture) fusing an error-state EKF, visual-inertial odometry, and pose-graph SLAM into a single honest-covariance pose estimate.",
         "Bridged the estimator to a PX4 flight stack over MAVLink behind an abstract flight-stack interface, with a failsafe cascade and phase supervisor for graceful degradation as sensors drop out.",
-        "Enforced a no-GPL-in-core license policy in CI, quarantining copyleft SLAM estimators behind a hard isolation boundary and generating an SBOM as regulatory evidence — recorded as ADR 0001.",
+        "Enforced a no-GPL-in-core license policy in CI, quarantining copyleft SLAM estimators behind a hard isolation boundary and generating an SBOM as regulatory evidence, recorded as ADR 0001.",
         "Wrote 18 test suites spanning unit, Hypothesis property, regression, and license-gate tests, and evaluated against EuRoC MH_01 with TUM-format trajectory output.",
         "Kept the honest framing the repo's own README uses: this is pre-alpha. The VIO source in the tree today is simulated, with Kimera-VIO integration in progress."
       ],
@@ -556,7 +614,7 @@
     },
     {
       "id": "ammver",
-      "name": "AMMVER — Emerging-Threat Forecasting",
+      "name": "AMMVER: Emerging-Threat Forecasting",
       "tagline": "Explainable conflict forecasting with a hybrid neural-network and hidden-Markov model",
       "description": "Led engineering for Vimy's DND IDEaS Fast Forward project forecasting global emerging threats using a hybrid neural-network and hidden-Markov-model approach. Built and presented an explainable conflict-forecasting concept live to a technical and military review audience, tying public information, statistical modeling, and machine-learning forecasts into a decision-support workflow.",
       "lanes": [
@@ -578,7 +636,7 @@
         "DND IDEaS"
       ],
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes / DND IDEaS Fast Forward program — client IP. Concept and role only; no repository or model access.",
+      "restricted_reason": "Vimy Systèmes / DND IDEaS Fast Forward program. Client IP. Concept and role only; no repository or model access.",
       "highlights": [
         "Led engineering for the $25,000 DND IDEaS Fast Forward grant project, 'Dynamically Forecasting Global Emerging Threats Using a Hybrid Neural Network and Hidden Markov Model'.",
         "Built an explainable forecasting model over public information, statistical methods, and machine-learning components to flag global flashpoints and emerging threats.",
@@ -588,7 +646,7 @@
     },
     {
       "id": "drone-surge",
-      "name": "Drone Surge — Cardboard UAS Concept",
+      "name": "Drone Surge: Cardboard UAS Concept",
       "tagline": "Round 2 design package for DND's attritable-UAS competition after a $35,000 Round 1 award",
       "description": "Co-authored Vimy's Round 2 design package for DND's Drone Surge / UAS competition after a Round 1 selection and $35,000 award. Contributed the system-engineering matrix, schematic package, manufacturability arguments, and scalable low-cost attritable UAS concept work aligned with operational effectiveness, interoperability, and domestic industrial capacity.",
       "lanes": [
@@ -608,7 +666,7 @@
         "DND IDEaS"
       ],
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes / DND IDEaS Drone Surge competition — client IP and live competition material.",
+      "restricted_reason": "Vimy Systèmes / DND IDEaS Drone Surge competition. Client IP and live competition material.",
       "highlights": [
         "Co-authored the Round 2 solution design package after the team was selected in Round 1 and awarded $35,000.",
         "Contributed the system-engineering matrix, the schematic package, and the manufacturability arguments behind a scalable low-cost attritable UAS concept.",
@@ -618,7 +676,7 @@
     },
     {
       "id": "5gcx",
-      "name": "5GCx — Pilot AI Evaluation",
+      "name": "5GCx: Pilot AI Evaluation",
       "tagline": "Gaze and head-pose analysis pipeline for pilot readiness and HMI evaluation",
       "description": "Supported engineering for a public AI/ML defence-tech platform focused on 5th-generation fighter lead-in training, pilot operational readiness, and human-machine-interface evaluation, using high-fidelity flight simulation as the testbed. Mohammad contributed on the analysis-pipeline side: head-pose estimation, screen detection, gaze stabilization, fixation and saccade classification, area-of-interest analysis, and situational-awareness scoring. Public framing emphasises sensor-fusion capacity, F-35 procurement fit, NORAD/NATO interoperability, and Canadian defence technology and data sovereignty; technical work stays intentionally high-level in the public portfolio.",
       "lanes": [
@@ -646,7 +704,7 @@
         "human-factors instrumentation"
       ],
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes partner-organisation contract — implementation specifics governed by partner NDA. Public framing only; no repository access.",
+      "restricted_reason": "Vimy Systèmes partner-organisation contract. Implementation specifics governed by partner NDA. Public framing only; no repository access.",
       "links": {
         "live": "https://5gcx.ai"
       },
@@ -662,7 +720,7 @@
     },
     {
       "id": "vimy-web",
-      "name": "vimy.ai — Public Web Presence",
+      "name": "vimy.ai: Public Web Presence",
       "tagline": "Public product surface for a deep-tech defence firm: React 19, motion, 3D embeds",
       "description": "Owned a large share of Vimy's public web presence: content architecture, visual direction, motion, 3D and Spline embeds, React 19 + Vite + Tailwind implementation, and deployment polish. The work translated deep-tech defence and AI programs into a public product surface that feels credible, technical, and presentable.",
       "lanes": [
@@ -685,13 +743,13 @@
         "motion design"
       ],
       "visibility": "restricted",
-      "restricted_reason": "Vimy Systèmes company property — the live site is public, the source is not.",
+      "restricted_reason": "Vimy Systèmes company property. The live site is public, the source is not.",
       "links": {
         "live": "https://vimy.ai"
       },
       "highlights": [
         "Owned a large share of the current public vimy.ai experience: content architecture, visual direction, motion, 3D/Spline embeds, React 19 + Vite + Tailwind implementation, and deployment polish.",
-        "Translated deep-tech defence and AI programs — autonomy, sensor fusion, explainable AI — into a public product surface that reads credible and technical rather than generic.",
+        "Translated deep-tech defence and AI programs, autonomy, sensor fusion, explainable AI, into a public product surface that reads credible and technical rather than generic.",
         "Shipped and maintained the live site as the company's primary public artifact for partners and program reviewers."
       ],
       "featured": false
@@ -722,9 +780,9 @@
       "visibility": "private",
       "highlights": [
         "Runs multiple strategies in parallel against IBKR ForecastEx event contracts, each with its own state, sizing rules, and exit logic, on an async-first client with reconnect-and-resubscribe handling.",
-        "Enforces a hard daily loss circuit-breaker in code: when running daily P&L crosses the threshold the runner cancels every open order and refuses new ones until the next trading day — a runaway strategy is mechanically impossible, not merely discouraged.",
+        "Enforces a hard daily loss circuit-breaker in code: when running daily P&L crosses the threshold the runner cancels every open order and refuses new ones until the next trading day, a runaway strategy is mechanically impossible, not merely discouraged.",
         "Gates every prospective entry behind an 8-point trade-approval checklist spanning contract-level checks (liquidity, spread, expiry runway), portfolio-level checks (existing exposure, correlation), and account-level checks (buying power, daily-loss headroom), logging the failing criterion on rejection.",
-        "Logs every trade to a real Postgres ledger — positions, fills, and P&L queryable post-hoc — and schedules runs against ForecastEx liquidity windows via APScheduler.",
+        "Logs every trade to a real Postgres ledger, positions, fills, and P&L queryable post-hoc, and schedules runs against ForecastEx liquidity windows via APScheduler.",
         "Deliberately closed source: it trades real money on live strategies."
       ],
       "featured": false
@@ -750,10 +808,17 @@
         "unittest"
       ],
       "visibility": "private",
+      "dev": {
+        "dir": "bounties",
+        "command": "python dashboard.py --no-browser",
+        "port": 8765,
+        "url": "http://localhost:8765",
+        "kind": "python"
+      },
       "highlights": [
-        "Built the whole dashboard on the Python standard library — no dependencies to install, run with one command against a local port.",
+        "Built the whole dashboard on the Python standard library, no dependencies to install, run with one command against a local port.",
         "Ranked listings by eligibility, recency, and role relevance, penalising crowded last-minute contests, with seniority as a ranking nudge rather than a rejection.",
-        "Modelled the daily loop explicitly — triage, apply queue, pipeline, later-with-a-reason — so an issue with a posting is recorded without inflating the application count.",
+        "Modelled the daily loop explicitly, triage, apply queue, pipeline, later-with-a-reason, so an issue with a posting is recorded without inflating the application count.",
         "Kept the honest edges visible in the UI: a 'global listing' badge means no location restriction was stated, not that identity or tax checks will be skipped.",
         "Private by design: local state holds personal job-hunt data and is intentionally git-ignored."
       ],
@@ -794,11 +859,22 @@
       "links": {
         "repo": "https://github.com/madirewolf/VapeMaxxx"
       },
+      "dev": {
+        "dir": "VapeMaxxx",
+        "command": "npm run dev",
+        "port": 3000,
+        "url": "http://localhost:3000",
+        "kind": "node",
+        "port_env": "PORT",
+        "port_arg": "--port",
+        "ready_pattern": "(?i)ready in|local: *http",
+        "requires": "SQLite dev database: npm run db:push && npm run db:seed"
+      },
       "highlights": [
         "Built a Next.js 14 catalog and community app (~3,400 lines of TypeScript, 12 pages plus 2 API routes, 9 Prisma models) with reviews, comments, favorites, leaderboards, and per-user profiles.",
-        "Implemented custom JWT auth from scratch — bcrypt password hashing plus jose sessions verified in Next middleware — with Zod-validated inputs and no auth library.",
+        "Implemented custom JWT auth from scratch, bcrypt password hashing plus jose sessions verified in Next middleware, with Zod-validated inputs and no auth library.",
         "Modelled monetization with an affiliate-click event table and a normalised many-to-many product-to-flavour join, and shipped age-gating plus legal pages as first-class routes for a regulated product.",
-        "Built in a single day with 2 commits and no tests — a prototype, and presented as one."
+        "Built in a single day with 2 commits and no tests, a prototype, and presented as one."
       ],
       "featured": false
     },
@@ -806,7 +882,7 @@
       "id": "capstone-bell412",
       "name": "Autonomous Bell-412 Helicopter Flight Stack",
       "tagline": "Online path replanning and DevOps on a 4-person NRC helicopter autonomy capstone",
-      "description": "Year-long ECE496Y1 capstone integrating and extending an autonomous flight stack for a Bell-412 medium-twin helicopter in high-fidelity simulation, built for the National Research Council of Canada's autonomous-rotorcraft program. Mohammad's individually attributable work was the online path-replanning and time-parametrization algorithm — obstacle avoidance modeled as Dubins-style circular arcs, intermediate velocities and accelerations derived, quintic splines stitched into a dynamically feasible trajectory in MATLAB — plus environment integration and DevOps across two Linux setups. The team delivered an end-to-end mission rehearsal: waypoint cruise, in-flight obstacle re-plan, and safe landing against the full sensor → SLAM → planner → controller pipeline.",
+      "description": "Year-long ECE496Y1 capstone integrating and extending an autonomous flight stack for a Bell-412 medium-twin helicopter in high-fidelity simulation, built for the National Research Council of Canada's autonomous-rotorcraft program. Mohammad's individually attributable work was the online path-replanning and time-parametrization algorithm, obstacle avoidance modeled as Dubins-style circular arcs, intermediate velocities and accelerations derived, quintic splines stitched into a dynamically feasible trajectory in MATLAB, plus environment integration and DevOps across two Linux setups. The team delivered an end-to-end mission rehearsal: waypoint cruise, in-flight obstacle re-plan, and safe landing against the full sensor → SLAM → planner → controller pipeline.",
       "lanes": [
         "systems"
       ],
@@ -844,13 +920,13 @@
       "id": "de1-soc-pinball",
       "name": "DE1-SoC Pinball Engine",
       "tagline": "Bare-metal C pinball physics engine and software renderer on the ARM DE1-SoC",
-      "description": "A from-scratch C implementation of a pinball game physics engine and renderer targeting the ARM-based Terasic DE1-SoC board. The game drives a VGA display, simulates rigid-body ball dynamics and collisions, and maps user input — flippers, launch — to hardware buttons, running in real time on an FPGA-backed HPS core. No engine, no library: 2D physics and a software framebuffer renderer written directly against memory-mapped I/O. Demonstrated both on actual hardware and via the CPULator DE1-SoC simulator.",
+      "description": "A from-scratch C implementation of a pinball game physics engine and renderer targeting the ARM-based Terasic DE1-SoC board. The game drives a VGA display, simulates rigid-body ball dynamics and collisions, and maps user input, flippers, launch, to hardware buttons, running in real time on an FPGA-backed HPS core. No engine, no library: 2D physics and a software framebuffer renderer written directly against memory-mapped I/O. Demonstrated both on actual hardware and via the CPULator DE1-SoC simulator.",
       "lanes": [
         "graphics",
         "systems"
       ],
       "lane_blurbs": {
-        "graphics": "A software rasteriser writing straight to a VGA framebuffer — rendering with nothing underneath it but memory addresses.",
+        "graphics": "A software rasteriser writing straight to a VGA framebuffer, rendering with nothing underneath it but memory addresses.",
         "systems": "Bare-metal ARM: memory-mapped I/O for display and input, real-time loop budgeting, and hardware-versus-simulator parity."
       },
       "role": "contributor",
@@ -871,7 +947,7 @@
       "highlights": [
         "Co-built a pinball game in bare-metal C for the ARM DE1-SoC, implementing 2D physics (ball motion, flipper interaction, collisions) and a software framebuffer renderer from scratch, with no game engine underneath.",
         "Worked directly with memory-mapped I/O for VGA output and hardware input on an ARM single-board computer, demoable on real hardware and on the CPULator simulator.",
-        "Co-authored: the repository holds 2,229 lines of C across 7 source files and 5 headers, of which 7 of 52 commits are Mohammad's — the repo owner authored the majority."
+        "Co-authored: the repository holds 2,229 lines of C across 7 source files and 5 headers, of which 7 of 52 commits are Mohammad's, the repo owner authored the majority."
       ],
       "featured": false
     },
@@ -908,7 +984,7 @@
       },
       "highlights": [
         "Built an interactive map over real OpenStreetMap data with POI-type and budget filtering via Yelp, custom iconography, and responsive decluttering through an invisible-grid approach.",
-        "Validated the interface with think-aloud studies, task timing, and heatmaps against ISO and Nielsen usability heuristics — design evaluated as engineering, not opinion.",
+        "Validated the interface with think-aloud studies, task timing, and heatmaps against ISO and Nielsen usability heuristics, design evaluated as engineering, not opinion.",
         "Extended it into a routing engine: BFS, Dijkstra, and A* for point-to-point, then a multi-destination travelling-courier solver combining greedy construction, multistart, and two-opt refinement over multi-destination Dijkstra.",
         "Tuned the solver with C++ multithreading inside a modular pipeline, with constraint-aware trip recommendation left as documented future work.",
         "Team course project (UofT ECE297) with weekly graded milestones."
@@ -919,13 +995,13 @@
       "id": "pokemon-dcgan",
       "name": "Pixelmon Dream Generator",
       "tagline": "DCGAN that learns a Pokémon sprite corpus and synthesizes new creatures",
-      "description": "A DCGAN that learns from a curated Pokémon image dataset to synthesize entirely new, Pokémon-style creatures. End-to-end: data collection, preprocessing, model design, training loops, and qualitative evaluation in a clean Jupyter workflow. The objective was not state-of-the-art samples; it was to engage with GAN training dynamics — instability, mode collapse, generator-discriminator balancing — directly enough to understand why the literature's stabilization tricks exist.",
+      "description": "A DCGAN that learns from a curated Pokémon image dataset to synthesize entirely new, Pokémon-style creatures. End-to-end: data collection, preprocessing, model design, training loops, and qualitative evaluation in a clean Jupyter workflow. The objective was not state-of-the-art samples; it was to engage with GAN training dynamics, instability, mode collapse, generator-discriminator balancing, directly enough to understand why the literature's stabilization tricks exist.",
       "lanes": [
         "ai",
         "graphics"
       ],
       "lane_blurbs": {
-        "ai": "Hands-on with the hard part of GANs — training collapse and its mitigations — rather than a tutorial-shaped dataset that hides it.",
+        "ai": "Hands-on with the hard part of GANs, training collapse and its mitigations, rather than a tutorial-shaped dataset that hides it.",
         "graphics": "Generative image synthesis: a fully-convolutional generator learning a sprite corpus's colour and silhouette language."
       },
       "role": "co-author",
