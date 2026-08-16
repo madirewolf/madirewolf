@@ -1,0 +1,71 @@
+# Mohammad Abu Daqer
+
+> Founding Engineer at Vimy Systèmes. Cinematic WebGL, full-stack product, applied AI. Based in Toronto, Ontario, Canada. Also written Mohammad Abu Dagar. Actively looking for Full Stack Engineer, Front End Engineer, Design Engineer, Creative Developer, AI Engineer.
+
+Computer Engineering graduate from the University of Toronto (2025, Certificate in Artificial Intelligence Engineering, Dean's Honour List) and the first engineering hire at Vimy Systèmes, a Canadian deep-tech firm building explainable AI, autonomy, and decision-support software for aerospace and defence. He works three lanes at once and wants all of them: cinematic graphics on the web (Three.js, WebGL, custom GLSL, motion), full-stack product (React 18/19, Next.js, TypeScript over Python, FastAPI, and Postgres), and applied AI (LLM and RAG pipelines, the Anthropic API, pgvector). Before Vimy he spent 14 months at Tenstorrent on qualification and bring-up infrastructure for the Wormhole and Grayskull AI accelerators, which is where the systems instinct comes from. In his own words: first-principles thinking, clear feedback loops, and systems that can be tested, debugged, and improved — technology that reduces friction, makes knowledge easier to reach, and turns screens back into something more human.
+
+Everything here is generated from a single dataset, projects.json. Counts are measured from the repositories themselves; where a project carries no numbers, nothing was measured and nothing is claimed. Work marked restricted is real and delivered but has no public repository to inspect.
+
+## Projects
+
+- [limiliminal](https://limiliminal.com): Interactive 3D solar-system portfolio in Three.js with custom GLSL planet shaders. sole author · 2025-2026. 5,434 lines TypeScript · 23 files · 41 commits. Stack: TypeScript, GLSL, Three.js, React Three Fiber, @react-three/drei, Next.js 14, React 18, Tailwind CSS.
+- [JobFinder](https://github.com/madirewolf/JobFinder): LLM job-discovery pipeline: 6 ATS feeds, pgvector RAG, Claude triage and drafting. sole author · 2026. 7,941 lines Python · 76 files · 10 test files. Stack: Python 3.12, Anthropic API, Claude Haiku, Claude Sonnet, Ollama, nomic-embed-text, Postgres 16, pgvector.
+- [LIMINALITY](https://github.com/madirewolf/liminality): First-person liminal-space puzzle game where tuning resonators unburies a techno track. sole author · 2026. Stack: JavaScript, Three.js, WebGL, GLSL, Web Audio API, FFT analysis, pointer lock, post-processing.
+- [complere](https://github.com/madirewolf/complere): Editorial supplements storefront with hand-drawn SVG molecules and a full checkout flow. sole author · 2026. 3,816 lines TypeScript · 33 files. Stack: TypeScript, Next.js 15, React 19, Tailwind CSS v4, Motion (Framer), Zustand, Radix UI, SVG.
+- [Redline](https://github.com/madirewolf/Redline): Voice-controlled Android fitness tracker: hands-free logging, calories, tempo analysis. sole author · 2026. 4,558 lines Kotlin · 46 files · 1 test file. Stack: Kotlin, Jetpack Compose, Material 3, Hilt, Room, KSP, Coroutines, Navigation-Compose.
+- [Reel Block](https://github.com/madirewolf/Reel_block): Android accessibility service that blocks the Reels feed but allows DM-shared reels. sole author · 2026. 2,298 lines Kotlin · 15 files · 3 test files. Stack: Kotlin, Android Accessibility Service, AndroidX, foreground services, SYSTEM_ALERT_WINDOW overlay, SharedPreferences, view-tree introspection, Gradle Kotlin DSL.
+- [ECHONOMY](https://echonomy.limiliminal.com): Spotify sample archaeology — meet the originals hiding inside your favourite tracks. sole author · 2026. Stack: JavaScript, Node.js, Express, Spotify Web API, Genius API, PKCE OAuth, Netlify Functions, Apple preview matching.
+- [ourspace](https://github.com/madirewolf/ourspace): Portfolio-first social platform with low-poly avatars and walkable creator galleries. sole author · 2026. Stack: TypeScript, Three.js, React, Vite, pnpm workspaces, local-first storage, 3D avatar systems.
+- [Autonomous Bell-412 Helicopter Flight Stack](https://github.com/sk-porwal/capstone): Online path replanning and DevOps on a 4-person NRC helicopter autonomy capstone. contributor · 2024-2025. Stack: MATLAB, ROS, C++, OMPL, Linux, Git, X-Plane, Gazebo.
+- [DE1-SoC Pinball Engine](https://github.com/yixinlok/pinball): Bare-metal C pinball physics engine and software renderer on the ARM DE1-SoC. contributor · 2022-2025. Stack: C, ARM DE1-SoC, memory-mapped I/O, VGA framebuffer, PS/2 input, CPULator, 2D rigid-body physics.
+- [DeLorean GIS & Route Optimizer](https://youtu.be/e3XM7Xxnoa0): Student-focused C++ map app: POI discovery, then multi-destination route optimization. co-author. Stack: C++, OpenStreetMap, Yelp API, LibCurl, Boost, BFS, Dijkstra, A*.
+- [Pixelmon Dream Generator](https://github.com/ahhmed-e/dcgan-pokemon): DCGAN that learns a Pokémon sprite corpus and synthesizes new creatures. co-author. Stack: Python, PyTorch, NumPy, Matplotlib, CUDA, DCGAN, convolutional networks, Jupyter.
+- [VapeMaxxx](https://github.com/madirewolf/VapeMaxxx): Catalog and community app with hand-rolled JWT auth and affiliate-click modeling. sole author · 2026. 3,373 lines TypeScript · 45 files · 2 commits. Stack: TypeScript, Next.js 14, React 18, Prisma 5, jose (JWT), bcryptjs, zod, Framer Motion.
+
+## Restricted work
+
+- FinalFusion — Maritime Domain Awareness: Multi-modal sensor-fusion platform for maritime domain awareness (DND IDEaS CFP6). lead engineer · 2026. 24,300 lines Python · 395 files · 88 commits · 54 test files. Stack: Python 3.12, FastAPI, TypeScript, React 19, Vite, Rego (OPA), Cerbos, Docker Compose. Restricted, no public repository. Vimy Systèmes / DND IDEaS CFP6 Challenge 13 — client IP, pre-submission. Architecture and metrics only; no repository access.
+- GPS-Denied Navigation Module: Flight-controller-agnostic GNSS-denied localization for small UAVs. lead engineer · 2026. 7,666 lines Python · 73 files · 26 commits · 18 test files. Stack: Python, NumPy, SciPy, OpenCV, error-state EKF, visual-inertial odometry, pose-graph SLAM, MAVLink. Restricted, no public repository. Vimy Systèmes product R&D — company IP, productisation in progress. Architecture and metrics only; no repository access.
+- [5GCx — Pilot AI Evaluation](https://5gcx.ai): Gaze and head-pose analysis pipeline for pilot readiness and HMI evaluation. contributor · 2025-2026. Stack: Python, PyTorch, OpenCV, NumPy, scikit-learn, YOLOv8, custom EKF, head-pose estimation. Restricted, no public repository. Vimy Systèmes partner-organisation contract — implementation specifics governed by partner NDA. Public framing only; no repository access.
+- AMMVER — Emerging-Threat Forecasting: Explainable conflict forecasting with a hybrid neural-network and hidden-Markov model. lead engineer · 2025-2026. Stack: hybrid neural networks, hidden Markov models, explainable AI, conflict forecasting, statistical modeling, decision support, policy-aware outputs, DND IDEaS. Restricted, no public repository. Vimy Systèmes / DND IDEaS Fast Forward program — client IP. Concept and role only; no repository or model access.
+- Drone Surge — Cardboard UAS Concept: Round 2 design package for DND's attritable-UAS competition after a $35,000 Round 1 award. co-author · 2025-2026. Stack: systems engineering matrix, schematic package, manufacturability analysis, attritable UAS, interoperability, DND IDEaS. Restricted, no public repository. Vimy Systèmes / DND IDEaS Drone Surge competition — client IP and live competition material.
+- [vimy.ai — Public Web Presence](https://vimy.ai): Public product surface for a deep-tech defence firm: React 19, motion, 3D embeds. contributor · 2025-2026. Stack: React 19, Vite, Tailwind CSS, Framer Motion, Spline 3D embeds, content architecture, motion design. Restricted, no public repository. Vimy Systèmes company property — the live site is public, the source is not.
+
+## Closed source personal work
+
+- IBKR Auto-Trader (GeniusActivities): Live-money multi-strategy runner with a hard loss circuit-breaker and 8-point trade gate. sole author. Stack: Python, ib_async, IBKR TWS/Gateway, ForecastEx, Postgres, SQLAlchemy, APScheduler, async/await. Closed source by choice.
+- Job Radar: Stdlib-only Python dashboard that ranks crypto and remote job feeds into a daily loop. sole author. Stack: Python, standard library only, HTML, feed aggregation, ranking heuristics, unittest. Closed source by choice.
+
+## Experience
+
+- [Vimy Systèmes](https://vimy.ai): Founding Engineer, Aug 2025 - present. Vimy Systèmes is a 4-person Canadian deep-tech firm building explainable AI, autonomy, sensor-fusion, and decision-support software for aerospace and defence partners. Mohammad joined as an independent contractor and advisor in July 2025 and became the first engineering hire that August. He leads engineering across nearly all active programs and drives product demos, technical architecture, proposal engineering, and the public web presence.
+- [Tenstorrent](https://tenstorrent.com/en): Qualification Engineering Intern, May 2023 - Jul 2024. Built and maintained bring-up and qualification infrastructure for next-generation AI accelerator silicon (Wormhole, Grayskull): automated tests, hardware bring-up on dev boards, real AI workload performance and stress testing, power-measurement experiments, and cross-team silicon and board debug — taking new processors from first silicon through full qualification on CI.
+
+## Education
+
+- University of Toronto: B.A.Sc. Computer Engineering. Faculty of Applied Science & Engineering. graduated June 2025. GPA 3.55 / 4.0. Certificate in Artificial Intelligence Engineering. Dean's Honour List. Capstone: ECE496Y1 — Autonomous Bell-412 Helicopter Flight Stack, 4-person team, sponsored by the National Research Council of Canada.
+- Relevant coursework: computer graphics, machine learning, deep learning, AI search, operating systems, algorithms and data structures, computer networks, security, controls, probability, software design, advanced C++.
+
+## What he is looking for
+
+- Status: actively looking.
+- Roles: Full Stack Engineer, Front End Engineer, Design Engineer, Creative Developer, AI Engineer.
+- Arrangements: full-time, contract, freelance.
+- Locations: Remote or Toronto, Canada.
+- Most wants to build the visible layer of hard systems: high-craft interfaces with real engineering behind them — WebGL and motion work, product surfaces on a Python/Postgres spine, and AI tooling that keeps a human in the loop.
+
+## Contact
+
+- [Email](mailto:mohammad.abu.daqer@gmail.com): mohammad.abu.daqer@gmail.com
+- [Portfolio](https://limiliminal.com): https://limiliminal.com
+- [GitHub](https://github.com/madirewolf): https://github.com/madirewolf
+- [LinkedIn](https://www.linkedin.com/in/mohammad-abu-daqer/): https://www.linkedin.com/in/mohammad-abu-daqer/
+- [Company](https://vimy.ai): https://vimy.ai
+
+## Optional
+
+- [projects.json](https://raw.githubusercontent.com/madirewolf/madirewolf/main/projects.json): the source of truth for everything above.
+- [api.json](https://raw.githubusercontent.com/madirewolf/madirewolf/main/api.json): the same dataset with a generation timestamp.
+- [schema.json](https://raw.githubusercontent.com/madirewolf/madirewolf/main/schema.json): JSON Schema the dataset validates against.
+- [resume.json](https://raw.githubusercontent.com/madirewolf/madirewolf/main/resume.json): the same person as JSON Resume v1.0.0.
+- [profile repository](https://github.com/madirewolf/madirewolf): build.py renders every file listed here.

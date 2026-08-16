@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://limiliminal.com/schema/projects.schema.json",
+  "title": "madirewolf portfolio dataset",
+  "description": "Single source of truth for Mohammad Abu Daqer's portfolio. Content only: all render/orbital configuration (distance, speed, size, phase, tilt, bump, shape, shader type, color) stays in the my_universe repo and is joined back by project id.",
+  "type": "object",
+  "required": ["person", "projects"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Relative path to this schema file."
+    },
+    "generated_at": {
+      "type": ["string", "null"],
+      "description": "ISO-8601 timestamp stamped by build.py on every run. Held as null in the hand-authored file.",
+      "format": "date-time"
+    },
+    "person": { "$ref": "#/$defs/person" },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/project" }
+    }
+  },
+  "$defs": {
+    "person": {
+      "type": "object",
+      "required": ["name", "headline", "location", "summary", "seeking", "links", "education", "experience"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "also_written": {
+          "type": "string",
+          "description": "Alternate transliteration of the same name; passport/legal spelling."
+        },
+        "headline": { "type": "string", "maxLength": 120 },
+        "location": { "type": "string" },
+        "summary": { "type": "string" },
+        "seeking": {
+          "type": "object",
+          "required": ["status", "roles", "arrangements", "locations", "note"],
+          "additionalProperties": false,
+          "properties": {
+            "status": { "type": "string" },
+            "roles": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "arrangements": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "locations": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "note": { "type": "string" }
+          }
+        },
+        "links": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "portfolio": { "type": "string", "format": "uri" },
+            "github": { "type": "string", "format": "uri" },
+            "linkedin": { "type": "string", "format": "uri" },
+            "work": { "type": "string", "format": "uri" },
+            "email": { "type": "string" },
+            "letterboxd": { "type": "string", "format": "uri" }
+          }
+        },
+        "education": {
+          "type": "object",
+          "required": ["institution", "degree", "graduated"],
+          "additionalProperties": false,
+          "properties": {
+            "institution": { "type": "string" },
+            "faculty": { "type": "string" },
+            "degree": { "type": "string" },
+            "certificate": { "type": "string" },
+            "graduated": { "type": "string" },
+            "gpa": { "type": "string" },
+            "honors": { "type": "array", "items": { "type": "string" } },
+            "capstone": { "type": "string" },
+            "coursework": { "type": "array", "items": { "type": "string" } },
+            "prior": { "type": "string" }
+          }
+        },
+        "experience": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["company", "title", "period", "summary", "highlights"],
+            "additionalProperties": false,
+            "properties": {
+              "company": { "type": "string" },
+              "title": { "type": "string" },
+              "period": { "type": "string" },
+              "location": { "type": "string" },
+              "url": { "type": "string", "format": "uri" },
+              "summary": { "type": "string" },
+              "highlights": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "tagline", "description", "lanes", "role", "technologies", "visibility", "highlights", "featured"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "Stable kebab-case join key. Never renamed; presentation.ts in my_universe joins orbital config to this id."
+        },
+        "name": { "type": "string" },
+        "tagline": { "type": "string", "maxLength": 90 },
+        "description": { "type": "string" },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["graphics", "fullstack", "ai", "systems"] }
+        },
+        "lane_blurbs": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "One line per lane, emphasising that lane's angle. Keys must be a subset of `lanes`.",
+          "properties": {
+            "graphics": { "type": "string" },
+            "fullstack": { "type": "string" },
+            "ai": { "type": "string" },
+            "systems": { "type": "string" }
+          }
+        },
+        "role": { "enum": ["sole author", "co-author", "lead engineer", "contributor"] },
+        "period": {
+          "type": "string",
+          "description": "Omitted when no source file carries a verifiable date range."
+        },
+        "technologies": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "metrics": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "description": "Measured values only, traceable to PROJECT_INVENTORY.md. Omitted entirely when nothing was measured.",
+          "properties": {
+            "loc": { "type": "integer", "minimum": 0 },
+            "language": { "type": "string" },
+            "files": { "type": "integer", "minimum": 0 },
+            "commits": { "type": "integer", "minimum": 0 },
+            "tests": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "visibility": { "enum": ["public", "private", "restricted"] },
+        "restricted_reason": { "type": "string" },
+        "links": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "repo": { "type": "string", "format": "uri" },
+            "live": { "type": "string", "format": "uri" },
+            "demo": { "type": "string", "format": "uri" }
+          }
+        },
+        "highlights": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "featured": { "type": "boolean" },
+        "pinned_order": { "type": "integer", "minimum": 1, "maximum": 6 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "visibility": { "const": "restricted" } }, "required": ["visibility"] },
+          "then": { "required": ["restricted_reason"] }
+        },
+        {
+          "if": { "properties": { "visibility": { "const": "restricted" } }, "required": ["visibility"] },
+          "then": {
+            "properties": {
+              "links": {
+                "not": { "required": ["repo"] },
+                "description": "Restricted work never carries a repo link."
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+name: build
+
+# Renders README.md, api.json, resume.json, and llms.txt from projects.json.
+# The rebuild only runs when the committed outputs have actually drifted from
+# the dataset, so the weekly run is a no-op instead of a timestamp commit.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - projects.json
+      - build.py
+      - .github/workflows/build.yml
+  schedule:
+    # Mondays, 07:00 UTC
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # build.py --check exits 0 when current, 1 when stale, 2 when the
+      # dataset itself is invalid. Only 1 means "rebuild"; 2 fails the run.
+      - name: Check whether the generated files are stale
+        id: check
+        run: |
+          set +e
+          python build.py --check
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+            echo "Generated files match projects.json." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$code" -eq 1 ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "Generated files are stale, rebuilding." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "projects.json failed validation (exit $code)." >> "$GITHUB_STEP_SUMMARY"
+            exit "$code"
+          fi
+
+      - name: Rebuild
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          set -o pipefail
+          python build.py | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md api.json resume.json llms.txt
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore: rebuild profile outputs from projects.json"
+          git push
