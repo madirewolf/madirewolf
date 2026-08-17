@@ -34,6 +34,7 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
+from urllib.parse import urlparse
 
 # --------------------------------------------------------------------------
 # configuration
@@ -70,6 +71,22 @@ FORBIDDEN_PROJECT_KEYS = {
 ROLES = {"sole author", "co-author", "lead engineer", "contributor"}
 VISIBILITIES = {"public", "private", "restricted"}
 METRIC_KEYS = {"loc", "language", "files", "commits", "tests"}
+
+# The optional "dev" block: how launcher/orrery.py runs a project locally.
+# This repository is public, so the block is portable by construction — a
+# directory NAME, a command, a port. schema.json says so, but a schema only
+# checks what runs it, and nothing does: CI runs `build.py --check` and
+# jsonschema is not a dependency. So the rule is enforced here, where it is on
+# the path of every build and every CI run. validate_dev() is the only thing
+# standing between a machine path and the public repository.
+DEV_KEYS = {"dir", "command", "port", "url", "kind", "ready_pattern",
+            "port_env", "port_arg", "requires"}
+DEV_REQUIRED = ("dir", "command")
+DEV_KINDS = {"node", "python", "make", "static"}
+DEV_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
+DEV_DIR_RE = re.compile(r"[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*")
+DEV_PORT_ENV_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+DEV_PORT_ARG_RE = re.compile(r"-{1,2}[A-Za-z0-9-]+")
 
 COUNTRY_CODES = {"Canada": "CA", "United States": "US"}
 
@@ -197,6 +214,88 @@ def qualifier(project: dict) -> str:
 # --------------------------------------------------------------------------
 
 
+def validate_dev(pid: str, project: dict, problems: list[str]) -> None:
+    """Check a project's optional "dev" block, if it has one.
+
+    The one rule worth more than the rest: `dir` is a directory NAME relative to
+    a root resolved at runtime, never a path. An absolute path committed here
+    would publish the author's filesystem layout to everyone who reads the repo,
+    and it would be published silently — orrery.py's safe_relative_dir() rejects
+    it, launchable() then drops the project, and the card simply never appears.
+    """
+    if "dev" not in project:
+        return
+    dev = project["dev"]
+    if not isinstance(dev, dict):
+        problems.append(f"{pid}: dev must be an object")
+        return
+
+    unknown = set(dev) - DEV_KEYS
+    if unknown:
+        problems.append(f"{pid}: dev has unknown keys: {', '.join(sorted(unknown))}")
+    for key in DEV_REQUIRED:
+        if not dev.get(key):
+            problems.append(f"{pid}: dev is missing required key {key!r}")
+
+    directory = dev.get("dir")
+    if isinstance(directory, str):
+        if "\\" in directory or directory.startswith("/") or ":" in directory:
+            problems.append(
+                f"{pid}: dev.dir {directory!r} looks like a machine path. It must "
+                f"be a directory name relative to the projects root — this "
+                f"repository is public, so no absolute paths, no drive letters")
+        elif ".." in directory.split("/"):
+            problems.append(f"{pid}: dev.dir {directory!r} escapes the projects root")
+        elif not DEV_DIR_RE.fullmatch(directory):
+            problems.append(
+                f"{pid}: dev.dir {directory!r} is not a plain relative directory name")
+    elif directory is not None:
+        problems.append(f"{pid}: dev.dir must be a string")
+
+    command = dev.get("command")
+    if command is not None and (not isinstance(command, str) or not command.strip()):
+        problems.append(f"{pid}: dev.command must be a non-empty string")
+
+    port = dev.get("port")
+    if port is not None:
+        if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+            problems.append(f"{pid}: dev.port {port!r} is not an integer 1-65535")
+
+    url = dev.get("url")
+    if url is not None:
+        parsed = urlparse(url) if isinstance(url, str) else None
+        if parsed is None or parsed.scheme not in ("http", "https") or \
+                (parsed.hostname or "") not in DEV_LOCAL_HOSTS:
+            problems.append(
+                f"{pid}: dev.url {url!r} must be http(s) on localhost — the "
+                f"launcher refuses to open anything else")
+
+    kind = dev.get("kind")
+    if kind is not None and kind not in DEV_KINDS:
+        problems.append(f"{pid}: dev.kind {kind!r} is not one of {sorted(DEV_KINDS)}")
+
+    pattern = dev.get("ready_pattern")
+    if pattern is not None:
+        if not isinstance(pattern, str):
+            problems.append(f"{pid}: dev.ready_pattern must be a string")
+        else:
+            try:
+                re.compile(pattern)
+            except re.error as e:
+                problems.append(f"{pid}: dev.ready_pattern is not a valid regex: {e}")
+
+    for key, rule in (("port_env", DEV_PORT_ENV_RE), ("port_arg", DEV_PORT_ARG_RE)):
+        value = dev.get(key)
+        if value is not None and (not isinstance(value, str)
+                                  or not rule.fullmatch(value)):
+            problems.append(f"{pid}: dev.{key} {value!r} does not match "
+                            f"{rule.pattern}")
+
+    requires = dev.get("requires")
+    if requires is not None and (not isinstance(requires, str) or not requires.strip()):
+        problems.append(f"{pid}: dev.requires must be a non-empty string")
+
+
 def validate(data: dict) -> None:
     problems: list[str] = []
 
@@ -236,6 +335,8 @@ def validate(data: dict) -> None:
                 f"{pid}: render configuration leaked back into the dataset: "
                 f"{', '.join(sorted(leaked))}"
             )
+
+        validate_dev(str(pid), project, problems)
 
         if len(project.get("tagline", "")) > 90:
             problems.append(f"{pid}: tagline is longer than 90 characters")
@@ -813,18 +914,29 @@ def main(argv: list[str] | None = None) -> int:
     # Render once against the timestamp already on disk. Anything that still
     # matches is genuinely unchanged and is left alone, so a rebuild that
     # changes nothing does not churn `generated_at` and does not dirty the
-    # working tree. Only files whose content moved get the new timestamp.
+    # working tree.
     baseline = render_all(data, existing_stamp(root, now), existing_readme)
-    fresh: dict[str, str] | None = None
+    stale = [name for name in OUTPUT_NAMES
+             if not (root / name).is_file()
+             or (root / name).read_text(encoding="utf-8") != baseline[name]]
+
     changed = []
-    for name in OUTPUT_NAMES:
-        path = root / name
-        if path.is_file() and path.read_text(encoding="utf-8") == baseline[name]:
-            continue
-        if fresh is None:
-            fresh = render_all(data, now, existing_readme)
-        write_text(path, fresh[name])
-        changed.append(name)
+    if stale:
+        # One build, one timestamp, written to every stamped file at once.
+        # Writing only the files whose CONTENT moved is not enough: api.json's
+        # "generated_at" and resume.json's "lastModified" are the same stamp,
+        # and existing_stamp() reads api.json alone. So a change that touches
+        # resume.json but not api.json used to give resume.json a fresh `now`
+        # while api.json kept the old one — after which every --check rendered
+        # resume.json against api.json's older stamp, called it stale, and
+        # every rebuild rewrote it with a new `now` without ever converging.
+        fresh = render_all(data, now, existing_readme)
+        for name in OUTPUT_NAMES:
+            path = root / name
+            if path.is_file() and path.read_text(encoding="utf-8") == fresh[name]:
+                continue
+            write_text(path, fresh[name])
+            changed.append(name)
 
     counts = Counter(project["visibility"] for project in data["projects"])
     print(

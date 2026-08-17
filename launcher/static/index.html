@@ -1,0 +1,2865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d0d">
+<title>Orrery — local launch pad</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230d0d0d'/%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%233987e5' stroke-opacity='.45'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%233987e5'/%3E%3Ccircle cx='16' cy='5.5' r='2.2' fill='%230ca30c'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --surface-3: #2c2c28;
+  --line: rgba(255, 255, 255, .10);
+  --line-strong: rgba(255, 255, 255, .18);
+  --text: #ffffff;
+  --text-2: #c3c2b7;
+  --muted: #898781;
+  --accent: #3987e5;
+  --accent-lift: #5c9fea;
+  --accent-soft: rgba(57, 135, 229, .13);
+  --good: #0ca30c;
+  --good-ink: #5cc95c;
+  --good-soft: rgba(12, 163, 12, .13);
+  --warn: #fab219;
+  --warn-soft: rgba(250, 178, 25, .11);
+  --critical: #d03b3b;
+  --critical-ink: #e8807f;
+  --critical-soft: rgba(208, 59, 59, .12);
+  --radius: 12px;
+  --radius-sm: 9px;
+  --shadow: 0 20px 56px rgba(0, 0, 0, .5);
+  --mono: ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 82% -20%, rgba(57, 135, 229, .10), transparent 30rem),
+    radial-gradient(circle at 4% 104%, rgba(57, 135, 229, .05), transparent 26rem),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; }
+button { color: inherit; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--accent); color: #fff; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+/* ---------- header ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px clamp(18px, 3.4vw, 44px);
+  border-bottom: 1px solid var(--line);
+  background: rgba(13, 13, 13, .84);
+  backdrop-filter: blur(18px);
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-name { font-size: 15px; font-weight: 750; letter-spacing: -.02em; }
+.brand-sub { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; }
+.topbar-spacer { flex: 1; }
+.topbar-tools { display: flex; align-items: center; gap: 10px; }
+
+/* Orrery mark: two orbit rings + a core. Two composited transforms, paused when
+   nothing is running and whenever the tab is hidden. */
+.orrery-mark { position: relative; width: 34px; height: 34px; flex: none; display: block; }
+.orrery-mark .orbit {
+  position: absolute;
+  border: 1px solid rgba(57, 135, 229, .30);
+  border-radius: 50%;
+  animation: spin linear infinite;
+}
+.orrery-mark .orbit::after {
+  content: "";
+  position: absolute;
+  top: -2.5px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(57, 135, 229, .6);
+}
+.orrery-mark .o1 { inset: 0; animation-duration: 16s; }
+.orrery-mark .o2 { inset: 8px; border-color: rgba(57, 135, 229, .2); animation-duration: 9s; animation-direction: reverse; }
+.orrery-mark .o2::after { width: 4px; height: 4px; top: -2px; margin-left: -2px; background: var(--muted); box-shadow: none; }
+.orrery-mark .core {
+  position: absolute;
+  inset: 15px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background .3s ease, box-shadow .3s ease;
+}
+.orrery-mark.live .core { background: var(--good); box-shadow: 0 0 10px rgba(12, 163, 12, .75); }
+.orrery-mark.live .o1::after, .orrery-mark.live .o2::after { background: var(--accent); }
+.orrery-mark:not(.live) .orbit { animation-play-state: paused; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.run-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.run-chip b { color: var(--text); font-variant-numeric: tabular-nums; }
+.search-wrap { position: relative; width: min(250px, 42vw); }
+.search {
+  width: 100%;
+  padding: 8px 30px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #121211;
+  color: var(--text);
+  font-size: 12px;
+}
+.search::placeholder { color: #6c6a65; }
+.search-wrap .kbd {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  transform: translateY(-50%);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--muted);
+  font: 600 10px/1.5 var(--mono);
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.search-wrap:focus-within .kbd { opacity: 0; }
+.confirm-anchor { position: relative; }
+
+/* ---------- shared primitives ---------- */
+.card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, .022), transparent 46%), var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.btn {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: transform .13s ease, border-color .13s ease, color .13s ease, background .13s ease;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--line-strong); color: var(--text); background: var(--surface-3); }
+.btn:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+.btn-primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover:not(:disabled) { color: #fff; background: var(--accent-lift); border-color: var(--accent-lift); }
+.btn-stop { color: var(--text); background: var(--surface-3); border-color: var(--line-strong); }
+.btn-stop:hover:not(:disabled) { color: #fff; background: #3a3733; border-color: rgba(208, 59, 59, .45); }
+.btn-ghost { background: transparent; }
+.btn-danger:hover:not(:disabled) { color: var(--critical-ink); border-color: rgba(208, 59, 59, .45); background: var(--critical-soft); }
+.btn-sm { min-height: 30px; padding: 5px 10px; font-size: 11px; border-radius: 8px; }
+.btn.ok { color: var(--good-ink); border-color: rgba(12, 163, 12, .45); }
+.btn svg { width: 13px; height: 13px; flex: none; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .022);
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.chip.lane { color: var(--accent); border-color: rgba(57, 135, 229, .28); background: var(--accent-soft); }
+.chip.kind { color: var(--muted); font-family: var(--mono); font-weight: 600; letter-spacing: 0; }
+.chip.good { color: var(--good-ink); border-color: rgba(12, 163, 12, .34); background: var(--good-soft); }
+.chip.warn { color: var(--warn); border-color: rgba(250, 178, 25, .32); background: var(--warn-soft); }
+.chip.critical { color: var(--critical-ink); border-color: rgba(208, 59, 59, .34); background: var(--critical-soft); }
+
+/* Only a passing health probe earns green. "unresponsive" is a live process
+   whose port never answered: amber, and steady rather than pulsing, because
+   nothing is in transition — it is simply not serving. */
+.status-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--muted); }
+.status-dot.running { background: var(--good); box-shadow: 0 0 0 4px rgba(12, 163, 12, .12); }
+.status-dot.starting, .status-dot.stopping, .status-dot.held, .status-dot.unresponsive { background: var(--warn); box-shadow: 0 0 0 4px rgba(250, 178, 25, .10); }
+.status-dot.starting, .status-dot.stopping { animation: blink 1.15s ease-in-out infinite; }
+.status-dot.crashed { background: var(--critical); box-shadow: 0 0 0 4px rgba(208, 59, 59, .12); }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+
+.empty-state {
+  padding: 26px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- page ---------- */
+main { width: min(1320px, 100%); margin: 0 auto; padding: 34px clamp(18px, 3.4vw, 44px) 96px; }
+body.drawer-open main { padding-bottom: calc(min(56vh, 540px) + 28px); }
+.page-head { max-width: 720px; margin-bottom: 20px; }
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 9px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.eyebrow::before { content: ""; width: 16px; height: 1px; background: currentColor; }
+h1 { margin: 0; font-size: clamp(26px, 3.6vw, 40px); line-height: 1.06; letter-spacing: -.04em; }
+.page-head p { margin: 11px 0 0; color: var(--text-2); font-size: 14px; }
+
+.port-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.port-label { margin-right: 4px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.port-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+}
+.port-chip b { color: var(--text-2); font: 700 11px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.port-chip.good { border-color: rgba(12, 163, 12, .3); background: var(--good-soft); color: var(--good-ink); }
+.port-chip.good b { color: var(--good-ink); }
+.port-chip.warn { border-color: rgba(250, 178, 25, .3); background: var(--warn-soft); color: var(--warn); }
+.port-chip.warn b { color: var(--warn); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 13px;
+  align-items: stretch;
+}
+.grid .span-all { grid-column: 1 / -1; }
+
+/* ---------- project card ---------- */
+.project-card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 18px;
+  transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+.project-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+.card-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  background: linear-gradient(90deg, rgba(12, 163, 12, .55), rgba(12, 163, 12, .16));
+  transition: opacity .25s ease;
+}
+.card-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, #4fd44f, transparent);
+  transform: translateX(-100%);
+  animation: sweep 3.6s linear infinite;
+}
+@keyframes sweep { to { transform: translateX(100%); } }
+.project-card[data-state="running"] {
+  border-color: rgba(12, 163, 12, .30);
+  box-shadow: 0 0 0 1px rgba(12, 163, 12, .06), 0 16px 40px rgba(12, 163, 12, .05);
+}
+.project-card[data-state="running"] .card-rail { opacity: 1; }
+.project-card[data-state="starting"] { border-color: rgba(250, 178, 25, .28); }
+.project-card[data-state="crashed"] { border-color: rgba(208, 59, 59, .30); }
+.project-card[data-state="held"] { border-color: rgba(250, 178, 25, .22); }
+.project-card[data-state="unresponsive"] { border-color: rgba(250, 178, 25, .28); }
+
+.card-head { display: flex; align-items: flex-start; gap: 12px; }
+.card-ident { min-width: 0; flex: 1; }
+.card-name { margin: 0; font-size: 15px; font-weight: 720; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.card-lanes { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.card-status { display: inline-flex; align-items: center; gap: 7px; flex: none; padding-top: 2px; }
+.state-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.state-label.running { color: var(--good-ink); }
+.state-label.starting, .state-label.stopping, .state-label.held, .state-label.unresponsive { color: var(--warn); }
+.state-label.crashed { color: var(--critical-ink); }
+
+.card-tagline {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 34px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+.meta { display: flex; align-items: baseline; gap: 6px; }
+.meta-k { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.meta-v { color: var(--text-2); font: 600 12px/1.3 var(--mono); font-variant-numeric: tabular-nums; }
+.meta-v.on { color: var(--good-ink); }
+.card-cmd {
+  display: block;
+  margin-top: 10px;
+  overflow: hidden;
+  color: var(--muted);
+  font: 400 11px/1.5 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-note {
+  margin-top: 11px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--muted);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 255, 255, .02);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.card-note.warn { border-left-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+/* Memory: plain ink at rest, amber once a tree is heavy enough to matter. */
+.meta-v.warn { color: var(--warn); }
+.run-mem { color: var(--muted); font-variant-numeric: tabular-nums; }
+.run-mem.warn { color: var(--warn); }
+.card-note.critical { border-left-color: var(--critical); color: var(--critical-ink); background: var(--critical-soft); }
+.card-note.accent { border-left-color: var(--accent); color: var(--text-2); background: var(--accent-soft); }
+/* Actions sit on a shared baseline so a row of cards reads as one board,
+   whatever mix of notes the cards above them carry. */
+.card-actions { margin-top: auto; padding-top: 14px; }
+.card-actions .btn-main { min-width: 78px; }
+
+/* ---------- notice / setup card ---------- */
+.notice-card { padding: 26px clamp(20px, 3vw, 32px); }
+.notice-title { margin: 8px 0 6px; font-size: 20px; letter-spacing: -.025em; }
+.notice-card p { max-width: 640px; margin: 0 0 14px; color: var(--text-2); font-size: 13px; }
+.code-block {
+  position: relative;
+  margin: 0 0 12px;
+  padding: 13px 15px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #121211;
+  color: var(--text-2);
+  font: 12px/1.6 var(--mono);
+  white-space: pre;
+}
+.notice-steps { display: grid; gap: 14px; margin: 4px 0 16px; }
+.step-num { color: var(--accent); font: 800 10px/1 var(--mono); letter-spacing: .12em; }
+.step-copy { margin: 6px 0 8px; color: var(--text-2); font-size: 12px; }
+
+/* ---------- banners ---------- */
+#banners {
+  position: fixed;
+  z-index: 90;
+  top: 80px;
+  right: 20px;
+  width: min(420px, calc(100vw - 40px));
+  display: grid;
+  gap: 8px;
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.banner span { flex: 1; }
+.banner.error { color: var(--critical-ink); border-color: rgba(208, 59, 59, .4); background: #201615; }
+.banner.warn { color: var(--warn); border-color: rgba(250, 178, 25, .4); background: #201c13; }
+.banner.good { color: var(--good-ink); border-color: rgba(12, 163, 12, .4); background: #131d13; }
+.banner-x { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 15px; line-height: 1; }
+
+/* ---------- inline confirm ---------- */
+.confirm-panel {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 9px);
+  right: 0;
+  width: 258px;
+  display: grid;
+  gap: 9px;
+  padding: 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: #141413;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+.confirm-copy { color: var(--text-2); font-size: 12px; line-height: 1.45; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 7px; }
+
+/* ---------- log drawer ---------- */
+.drawer {
+  position: fixed;
+  z-index: 70;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: min(56vh, 540px);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(101%);
+  transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+  border-top: 1px solid var(--line-strong);
+  background: rgba(18, 18, 17, .97);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow);
+}
+.drawer.open { transform: none; }
+.drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px clamp(16px, 3vw, 28px);
+  border-bottom: 1px solid var(--line);
+}
+.drawer-title { font-size: 13px; font-weight: 720; letter-spacing: -.01em; }
+.drawer-sub { color: var(--muted); font-size: 11px; }
+.drawer-spacer { flex: 1; }
+.log-body {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 14px clamp(16px, 3vw, 28px) 22px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--text-2);
+  font: 12px/1.6 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.log-line { display: block; }
+.log-line.err { color: var(--critical-ink); }
+.log-line.warn { color: var(--warn); }
+.log-line.meta { color: var(--muted); font-style: italic; }
+.log-empty { color: var(--muted); }
+.jump-btn {
+  position: absolute;
+  right: clamp(16px, 3vw, 28px);
+  bottom: 18px;
+  z-index: 2;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- view toggle ---------- */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.seg button {
+  min-height: 26px;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  transition: color .14s ease, background .14s ease;
+}
+.seg button:hover { color: var(--text-2); }
+.seg button[aria-pressed="true"] { color: #fff; background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* ---------- git chips ---------- */
+.git-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.git-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font: 600 11px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.git-chip svg { width: 11px; height: 11px; flex: none; opacity: .85; }
+.git-chip.dirty { color: var(--warn); }
+/* Not a branch: a detached HEAD is worth seeing, so it is never muted. */
+.git-chip.detached { color: var(--warn); }
+.git-chip.ahead { color: var(--accent-lift); }
+.git-chip.behind { color: var(--text-2); }
+.git-dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: currentColor; }
+
+/* ---------- icon buttons / tool row ---------- */
+.card-tools, .panel-tools { display: flex; align-items: center; gap: 6px; }
+.card-tools { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--line); }
+.tool-spacer { flex: 1; }
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform .13s ease, color .13s ease, border-color .13s ease, background .13s ease;
+}
+.icon-btn:hover:not(:disabled) { transform: translateY(-1px); color: var(--text); border-color: var(--line-strong); background: var(--surface-3); }
+.icon-btn:disabled { opacity: .34; cursor: not-allowed; transform: none; }
+.icon-btn.ok { color: var(--good-ink); border-color: rgba(12, 163, 12, .45); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+/* ---------- orbital view ---------- */
+.orbital-wrap {
+  position: relative;
+  height: clamp(420px, 64vh, 760px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 50% 47%, rgba(57, 135, 229, .07), transparent 62%),
+    var(--surface);
+}
+#orbitalCanvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+#orbitalCanvas.hot { cursor: pointer; }
+#orbitalCanvas:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.orb-tip {
+  position: absolute;
+  z-index: 5;
+  max-width: 240px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: rgba(20, 20, 19, .97);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  font-size: 11px;
+  line-height: 1.45;
+}
+.orb-tip b { display: block; font-size: 12px; font-weight: 700; }
+.orb-tip .tip-meta { color: var(--muted); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.orb-legend {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  color: var(--muted);
+  font-size: 10px;
+  pointer-events: none;
+}
+.orb-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.orb-legend i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.orb-hint {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  color: var(--muted);
+  font-size: 10px;
+  pointer-events: none;
+}
+.orb-hint .mono { color: var(--text-2); }
+.orb-panel {
+  position: fixed;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 12px clamp(18px, 3.4vw, 44px);
+  border-top: 1px solid var(--line-strong);
+  background: rgba(18, 18, 17, .97);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow);
+}
+.orb-panel .panel-ident { min-width: 0; }
+.orb-panel .panel-name { font-size: 14px; font-weight: 720; letter-spacing: -.015em; }
+.orb-panel .panel-sub { display: flex; align-items: center; gap: 7px; margin-top: 3px; color: var(--muted); font-size: 11px; }
+.orb-panel .panel-sub .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.orb-panel .panel-spacer { flex: 1; }
+/* The drawer owns the bottom of the screen while it is open; the panel steps
+   aside rather than stacking, and the page keeps the drawer's padding. */
+body.drawer-open .orb-panel { display: none; }
+body.panel-open:not(.drawer-open) main { padding-bottom: 132px; }
+
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; min-height: 0; }
+  .brand-sub { display: none; }
+  .topbar-spacer { display: none; }
+  .brand { flex: 1; }
+  .topbar-tools { flex: 1 1 100%; }
+  .search-wrap { order: 5; width: 100%; }
+  main { padding-top: 26px; }
+  #banners { top: 118px; right: 12px; width: calc(100vw - 24px); }
+  .grid { grid-template-columns: 1fr; }
+  .drawer { height: min(66vh, 540px); }
+  .orbital-wrap { height: clamp(360px, 58vh, 560px); }
+  .orb-legend, .orb-hint { display: none; }
+  body.panel-open:not(.drawer-open) main { padding-bottom: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+/* Nothing animates while the tab is in the background. */
+body.tab-hidden *, body.tab-hidden *::before, body.tab-hidden *::after { animation-play-state: paused !important; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span id="mark" class="orrery-mark" aria-hidden="true">
+      <span class="orbit o1"></span>
+      <span class="orbit o2"></span>
+      <span class="core"></span>
+    </span>
+    <div>
+      <div class="brand-name">Orrery</div>
+      <div class="brand-sub">Local launch pad</div>
+    </div>
+  </div>
+
+  <span class="topbar-spacer"></span>
+
+  <div class="search-wrap">
+    <input id="search" class="search" type="search" placeholder="Search name or lane" aria-label="Search projects by name or lane" autocomplete="off" spellcheck="false">
+    <span class="kbd" aria-hidden="true">/</span>
+  </div>
+
+  <div class="topbar-tools">
+    <div id="viewToggle" class="seg" role="group" aria-label="View mode">
+      <button id="viewGrid" type="button" aria-pressed="true">Grid</button>
+      <button id="viewOrbital" type="button" aria-pressed="false">Orbital</button>
+    </div>
+    <div id="runChip" class="run-chip" role="status" aria-live="polite">
+      <span id="runDot" class="status-dot" aria-hidden="true"></span>
+      <span id="runText">Connecting…</span>
+    </div>
+    <div class="confirm-anchor">
+      <button id="stopAllBtn" class="btn btn-sm btn-danger" type="button" disabled>Stop all</button>
+    </div>
+    <button id="quitBtn" class="btn btn-sm btn-ghost" type="button">Quit</button>
+  </div>
+</header>
+
+<main>
+  <div id="banners" aria-live="polite"></div>
+
+  <div class="page-head">
+    <div class="eyebrow">Local dev · madirewolf</div>
+    <h1>Every server in the system, one board.</h1>
+    <p>Start, stop and watch the projects described in <span class="mono">projects.json</span>. Orrery reads the same file the portfolio does — a project becomes launchable the moment it gains a <span class="mono">dev</span> block.</p>
+  </div>
+
+  <div id="portStrip" class="port-strip" hidden></div>
+
+  <div id="grid" class="grid"></div>
+
+  <section id="orbital" hidden>
+    <div class="orbital-wrap">
+      <canvas id="orbitalCanvas" tabindex="0" role="img" aria-label="Orbital view of the projects"></canvas>
+      <div id="orbTip" class="orb-tip" role="tooltip" hidden></div>
+      <div class="orb-legend" aria-hidden="true">
+        <span style="color:var(--accent)"><i></i>healthy</span>
+        <span style="color:var(--warn)"><i></i>starting / no response</span>
+        <span style="color:var(--critical)"><i></i>crashed</span>
+        <span><i></i>stopped</span>
+      </div>
+      <div class="orb-hint" aria-hidden="true">click a body · <span class="mono">space</span> start/stop · <span class="mono">esc</span> deselect</div>
+    </div>
+  </section>
+</main>
+
+<section id="orbPanel" class="orb-panel" aria-label="Selected project" hidden></section>
+
+<section id="drawer" class="drawer" aria-label="Server logs" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <div id="drawerTitle" class="drawer-title">Logs</div>
+      <div id="drawerSub" class="drawer-sub"></div>
+    </div>
+    <span class="drawer-spacer"></span>
+    <button id="followBtn" class="btn btn-sm" type="button">Following</button>
+    <button id="copyLogsBtn" class="btn btn-sm btn-ghost" type="button">Copy</button>
+    <button id="drawerClose" class="btn btn-sm btn-ghost" type="button">Close <span class="mono" style="opacity:.6">esc</span></button>
+  </div>
+  <pre id="logBody" class="log-body" tabindex="0"></pre>
+  <button id="jumpBtn" class="btn btn-sm jump-btn" type="button" hidden>Jump to latest ↓</button>
+</section>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ * Orrery frontend. Vanilla, no dependencies, no network beyond the
+ * local launcher. Every string that arrives from JSON is inserted with
+ * textContent semantics through el(), so project data can never become
+ * markup.
+ * ------------------------------------------------------------------ */
+
+const POLL_STATUS = 2000;
+const POLL_STATUS_HIDDEN = 15000;
+const POLL_LOGS = 1000;
+const POLL_HEALTH = 10000;
+const PENDING_TTL = 20000;
+const MAX_LOG_LINES = 900;
+// A freshly spawned server is allowed this long to answer its first probe
+// before the card stops calling it "starting" and starts calling it silent.
+const PROBE_GRACE_SECS = 12;
+const VIEW_KEY = 'orrery.view';
+
+function el(tag, attrs) {
+  const node = document.createElement(tag);
+  if (attrs) {
+    for (const key in attrs) {
+      const value = attrs[key];
+      if (value === null || value === undefined) continue;
+      if (key === 'class') node.className = value;
+      else if (key.slice(0, 2) === 'on') node.addEventListener(key.slice(2), value);
+      else node.setAttribute(key, value);
+    }
+  }
+  const children = Array.prototype.slice.call(arguments, 2).flat(Infinity);
+  for (const child of children) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child.nodeType ? child : String(child));
+  }
+  return node;
+}
+function $(id) { return document.getElementById(id); }
+const SVG_NS = 'http://www.w3.org/2000/svg';
+// Icons are inline paths, not glyphs: no font to load, and they inherit
+// currentColor so a disabled button dims its icon with it.
+function svgIcon(paths, extra) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', extra && extra.width ? extra.width : '1.5');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of paths) {
+    const node = document.createElementNS(SVG_NS, 'path');
+    node.setAttribute('d', d);
+    svg.append(node);
+  }
+  if (extra && extra.circles) {
+    for (const c of extra.circles) {
+      const node = document.createElementNS(SVG_NS, 'circle');
+      node.setAttribute('cx', c[0]);
+      node.setAttribute('cy', c[1]);
+      node.setAttribute('r', c[2]);
+      if (c[3]) node.setAttribute('fill', 'currentColor');
+      svg.append(node);
+    }
+  }
+  return svg;
+}
+const ICONS = {
+  vscode: function () { return svgIcon(['M5.6 4.8 2.2 8l3.4 3.2', 'M10.4 4.8 13.8 8l-3.4 3.2', 'M9.3 3.4 6.7 12.6']); },
+  cursor: function () { return svgIcon(['M3.6 2.6l9 4.1-3.7 1.3-1.3 3.7-4-9.1z', 'M9.6 9.6l3.1 3.4']); },
+  claude: function () { return svgIcon(['M8 2.2v11.6', 'M3 4.8l10 6.4', 'M13 4.8l-10 6.4'], { width: '1.4' }); },
+  folder: function () { return svgIcon(['M2.2 4.4a1 1 0 0 1 1-1h2.9l1.4 1.7h5.3a1 1 0 0 1 1 1v5.5a1 1 0 0 1-1 1H3.2a1 1 0 0 1-1-1z']); },
+  copy: function () { return svgIcon(['M5.6 5.6V3.4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2.2', 'M3.4 5.6h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z']); },
+  branch: function () { return svgIcon(['M4.5 5.6v4.8', 'M11.5 6.6v.6a2.4 2.4 0 0 1-2.4 2.4H6.9a2.4 2.4 0 0 0-2.4 2.4'],
+    { width: '1.3', circles: [[4.5, 4.1, 1.5], [11.5, 4.9, 1.5]] }); },
+  arrowUp: function () { return svgIcon(['M8 12.6V3.8', 'M4.6 7.2 8 3.6l3.4 3.6'], { width: '1.6' }); },
+  arrowDown: function () { return svgIcon(['M8 3.4v8.8', 'M4.6 8.8 8 12.4l3.4-3.6'], { width: '1.6' }); }
+};
+function isTypingTarget() {
+  const target = document.activeElement;
+  if (!target) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable === true;
+}
+
+const OFFLINE_MESSAGE = 'Orrery is not running. Double-click orrery.bat, then reload this page.';
+async function api(path, options) {
+  let response;
+  try {
+    response = await fetch(path, options);
+  } catch (error) {
+    const offline = new Error(OFFLINE_MESSAGE);
+    offline.offline = true;
+    throw offline;
+  }
+  let data = null;
+  try { data = await response.json(); } catch (e) {}
+  if (!response.ok) {
+    const failure = new Error((data && (data.error || data.message)) || ('HTTP ' + response.status));
+    failure.status = response.status;
+    failure.data = data;
+    throw failure;
+  }
+  return data;
+}
+function post(path, body) {
+  return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+}
+
+/* ---------------------------- state ---------------------------- */
+
+const S = {
+  projects: [],
+  loaded: false,
+  fatal: null,          // message shown instead of the grid
+  fatalData: null,      // the failure's structured payload, so the grid can tell
+                        // "no projects root" from "projects.json will not parse"
+  offline: false,
+  health: null,
+  filter: '',
+  order: '',            // id order currently in the DOM
+  pending: Object.create(null),   // id -> {want:'starting'|'stopping', at:ms}
+  quitting: false,
+  view: 'grid',         // remembered in localStorage; 'grid' | 'orbital'
+  // Sticky: once any row has carried probe data we trust the absence of it.
+  // Until then a launcher with no probe thread must not paint every card amber.
+  healthSupported: false,
+  // target -> {ok:bool, why:string}. Seeded from /api/health when the launcher
+  // publishes it, and corrected by the first 409 an actual attempt earns.
+  openTargets: Object.create(null)
+};
+const CARDS = new Map();          // id -> {root, refs}
+// `gen` is the log-poll chain's generation. Every switch bumps it, so a request
+// already in flight when the drawer changes cannot re-arm the chain it belongs
+// to: without it each switch left its old setTimeout pending, that tick found
+// the drawer non-busy, ran, and scheduled its own successor — a second
+// permanent polling loop per switch, all of them hammering /api/logs and each
+// one taking the launcher's global lock.
+const DRAWER = { id: null, cursor: 0, follow: true, timer: null, busyGen: -1, lines: 0, gen: 0 };
+let statusTimer = null;
+let uptimeTimer = null;
+
+/* ------------------------- state machine ------------------------ */
+
+const STATE_LABEL = {
+  stopped: 'Stopped',
+  starting: 'Starting',
+  running: 'Running',
+  stopping: 'Stopping',
+  held: 'Port held',
+  crashed: 'Crashed',
+  waking: 'Starting',        // process up, first probe still outstanding
+  unresponsive: 'No response' // process up, probe came back empty-handed
+};
+const RAW_STATE = {
+  running: 'running', up: 'running', alive: 'running',
+  starting: 'starting', launching: 'starting', boot: 'starting', booting: 'starting',
+  stopping: 'stopping', terminating: 'stopping',
+  stopped: 'stopped', idle: 'stopped', down: 'stopped', exited: 'stopped',
+  crashed: 'crashed', failed: 'crashed', error: 'crashed',
+  external: 'held', foreign: 'held', held: 'held',
+  'port-held-by-other': 'held', 'port_held_by_other': 'held', 'port-in-use': 'held', 'port_in_use': 'held'
+};
+
+// The launcher is the source of truth; a pending local action only shows
+// through until the launcher confirms it or the action times out.
+function serverState(project) {
+  const raw = String(project && project.status || '').toLowerCase().replace(/\s+/g, '-');
+  const mapped = RAW_STATE[raw];
+  if (mapped) return mapped;
+  if (project && project.pid) return 'running';
+  if (project && project.port_in_use_by_other) return 'held';
+  return 'stopped';
+}
+function stateOf(project) {
+  const live = serverState(project);
+  const pending = S.pending[project.id];
+  if (!pending) return live === 'stopped' && project.port_in_use_by_other ? 'held' : live;
+  if (Date.now() - pending.at > PENDING_TTL) { delete S.pending[project.id]; return live; }
+  if (pending.want === 'starting' && (live === 'running' || live === 'crashed' || live === 'starting')) {
+    delete S.pending[project.id];
+    return live;
+  }
+  if (pending.want === 'stopping' && (live === 'stopped' || live === 'crashed' || live === 'held')) {
+    delete S.pending[project.id];
+    return live;
+  }
+  return pending.want;
+}
+function isLive(state) { return state === 'running' || state === 'starting' || state === 'stopping'; }
+
+/* ------------------------ health & git model -------------------- */
+
+function firstNumber() {
+  for (const value of arguments) {
+    const parsed = typeof value === 'boolean' ? NaN : parseFloat(value);
+    if (isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+const PROBE_OK = { ok: 1, healthy: 1, up: 1, good: 1, pass: 1, passing: 1, reachable: 1, alive: 1 };
+const PROBE_DOWN = { unreachable: 1, refused: 1, timeout: 1, 'timed-out': 1, down: 1, closed: 1, unavailable: 1 };
+const PROBE_ERR = { error: 1, err: 1, failed: 1, failure: 1, bad: 1, unhealthy: 1 };
+
+// The probe payload is read defensively. The launcher may hang it off the row as
+// an object ({health:{health,http_status,...}}) or flatten it onto the row; both
+// shapes, and the total absence of either, have to render something honest.
+function healthInfo(project) {
+  if (!project) return null;
+  const raw = project.health !== undefined && project.health !== null ? project.health : project.probe;
+  let status = null;
+  let httpStatus = null;
+  let latency = null;
+  let checkedAt = null;
+  let detail = '';
+  if (typeof raw === 'string' || typeof raw === 'boolean') {
+    status = typeof raw === 'boolean' ? (raw ? 'ok' : 'unreachable') : raw;
+  } else if (raw && typeof raw === 'object') {
+    status = raw.health || raw.status || raw.state || null;
+    if (typeof status !== 'string') status = null;
+    httpStatus = firstNumber(raw.http_status, raw.status_code, raw.code, raw.http);
+    latency = firstNumber(raw.latency_ms, raw.latency, raw.ms);
+    checkedAt = raw.checked_at !== undefined ? raw.checked_at : raw.at;
+    if (typeof raw.error === 'string') detail = raw.error;
+    else if (typeof raw.message === 'string') detail = raw.message;
+  }
+  if (!status && typeof project.health_status === 'string') status = project.health_status;
+  if (httpStatus === null) httpStatus = firstNumber(project.http_status);
+  if (latency === null) latency = firstNumber(project.latency_ms);
+  if (checkedAt === null || checkedAt === undefined) checkedAt = project.checked_at;
+  if (!status) return null;
+
+  const key = String(status).toLowerCase().replace(/\s+/g, '-');
+  let kind;
+  if (PROBE_OK[key]) kind = 'ok';
+  else if (PROBE_DOWN[key]) kind = 'unreachable';
+  else if (PROBE_ERR[key]) kind = 'error';
+  else return null;                    // "pending", "unknown", anything unseen
+  return { kind: kind, raw: key, httpStatus: httpStatus, latency: latency, checkedAt: checkedAt, detail: detail };
+}
+function projectUrl(project) {
+  return (project && project.url) || dev(project).url || null;
+}
+
+// The presentation state. stateOf() stays the control-plane truth — every
+// button, every count and every confirm still reads it — and this only decides
+// what the dot is allowed to say. Green is the point of the exercise: it is
+// spent on a passing probe and on nothing else.
+function viewState(project) {
+  const state = stateOf(project);
+  if (state !== 'running') return state;
+  const info = healthInfo(project);
+  if (info) return info.kind === 'ok' ? 'running' : 'unresponsive';
+  if (!S.healthSupported || !projectUrl(project)) return 'running';
+  const uptime = firstNumber(project.uptime_secs);
+  return uptime !== null && uptime < PROBE_GRACE_SECS ? 'waking' : 'unresponsive';
+}
+function dotClass(state) { return state === 'waking' ? 'starting' : state; }
+function isHealthy(project) { return viewState(project) === 'running'; }
+// Anything mid-flight. Drives the orbital view's animation budget: when this is
+// empty for every visible body, the rAF loop is allowed to stop for good.
+const MOVING_STATES = { running: 1, starting: 1, stopping: 1, waking: 1, unresponsive: 1 };
+
+function gitInfo(project) {
+  const git = project && project.git;
+  if (!git || typeof git !== 'object') return null;
+  if (git.is_repo === false) return null;
+  const branch = typeof git.branch === 'string' && git.branch ? git.branch : null;
+  const error = typeof git.error === 'string' && git.error ? git.error : null;
+  const dirtyRaw = git.dirty;
+  const dirty = dirtyRaw === true ? -1 : firstNumber(dirtyRaw);   // -1: dirty, count unknown
+  const ahead = firstNumber(git.ahead);
+  const behind = firstNumber(git.behind);
+  if (git.is_repo !== true && branch === null && dirty === null && error === null) return null;
+  return {
+    branch: branch,
+    // The launcher answers a detached HEAD with {branch: "<short oid>",
+    // detached: true} — it substitutes the commit for the branch name, so the
+    // branch field is never null and recomputing this from "no branch" alone is
+    // always false. Read the flag it sends; the fallback is only for a payload
+    // that carries no flag at all.
+    detached: git.detached === true || (branch === null && !error),
+    dirty: dirty === null ? 0 : dirty,
+    ahead: ahead === null ? 0 : ahead,
+    behind: behind === null ? 0 : behind,
+    error: error
+  };
+}
+
+/* ---------------------------- format --------------------------- */
+
+function fmtUptime(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return '—';
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h) return h + 'h ' + String(m).padStart(2, '0') + 'm';
+  if (m) return m + 'm ' + String(s).padStart(2, '0') + 's';
+  return s + 's';
+}
+// Anything at or above this is worth knowing about on a laptop: a single
+// Next.js dev server sits around here, and four of them is most of the RAM.
+const MEM_HEAVY_BYTES = 600 * 1024 * 1024;
+
+function fmtBytes(bytes) {
+  if (!isFinite(bytes) || bytes <= 0) return '—';
+  const mb = bytes / 1048576;
+  if (mb < 1000) return Math.round(mb) + ' MB';
+  return (mb / 1024).toFixed(1) + ' GB';
+}
+function dev(project) { return (project && project.dev) || {}; }
+function effectivePort(project) {
+  const port = project.port !== null && project.port !== undefined ? project.port : dev(project).port;
+  const value = parseInt(port, 10);
+  return isFinite(value) ? value : null;
+}
+function defaultPort(project) {
+  const value = parseInt(dev(project).port, 10);
+  return isFinite(value) ? value : null;
+}
+function laneList(project) {
+  return Array.isArray(project.lanes) ? project.lanes.filter(function (lane) { return typeof lane === 'string'; }) : [];
+}
+
+/* ---------------------------- banners -------------------------- */
+
+function showBanner(message, kind) {
+  const banner = el('div', { class: 'banner ' + (kind || 'error'), role: 'alert' }, el('span', {}, message));
+  const close = el('button', { class: 'banner-x', 'aria-label': 'Dismiss message', type: 'button' }, '×');
+  close.addEventListener('click', function () { banner.remove(); });
+  banner.append(close);
+  $('banners').append(banner);
+  if (kind === 'good') setTimeout(function () { banner.remove(); }, 5000);
+  return banner;
+}
+function showError(message) { return showBanner(message, 'error'); }
+function actionButton(label, onClick, className) {
+  const button = el('button', { class: className || 'btn btn-sm', type: 'button' }, label);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+/* ------------------------ inline confirm ----------------------- */
+
+let confirmNode = null;
+function closeConfirm() {
+  if (confirmNode) { confirmNode.remove(); confirmNode = null; }
+}
+function openConfirm(anchor, copy, confirmLabel, onConfirm) {
+  closeConfirm();
+  const go = actionButton(confirmLabel, function () {
+    closeConfirm();
+    onConfirm();
+  }, 'btn btn-sm btn-primary');
+  const panel = el('div', { class: 'confirm-panel', role: 'dialog', 'aria-label': copy },
+    el('div', { class: 'confirm-copy' }, copy),
+    el('div', { class: 'confirm-actions' }, actionButton('Cancel', closeConfirm, 'btn btn-sm btn-ghost'), go));
+  panel.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') { event.stopPropagation(); closeConfirm(); }
+  });
+  anchor.append(panel);
+  confirmNode = panel;
+  go.focus();
+}
+document.addEventListener('mousedown', function (event) {
+  if (confirmNode && !confirmNode.contains(event.target)) closeConfirm();
+});
+
+/* ---------------------------- loading -------------------------- */
+
+function normalizeProjects(data) {
+  if (Array.isArray(data)) return { list: data, error: null };
+  if (data && Array.isArray(data.projects)) return { list: data.projects, error: data.error || data.root_error || null };
+  return { list: [], error: (data && (data.error || data.root_error)) || null };
+}
+
+async function loadProjects() {
+  try {
+    const data = await api('/api/projects');
+    const parsed = normalizeProjects(data);
+    S.projects = parsed.list.filter(function (project) { return project && project.id; });
+    if (!S.healthSupported && S.projects.some(function (project) { return healthInfo(project) !== null; })) {
+      S.healthSupported = true;
+    }
+    for (const project of S.projects) noteUptime(project);
+    S.fatal = parsed.error;
+    S.fatalData = parsed.error ? data : null;
+    S.offline = false;
+  } catch (error) {
+    S.offline = !!error.offline;
+    S.fatal = error.message;
+    S.fatalData = error.data || null;
+    if (!error.offline) S.projects = [];
+  }
+  S.loaded = true;
+  render();
+}
+
+/* ---------------------------- health --------------------------- */
+
+// /api/health carries three things the grid cannot: whether the background
+// state machine is still running, what the orphan reaper did on this boot, and
+// which projects were dropped or hidden before they ever reached a card. All
+// three are silent failures if nobody renders them — a dead watchdog freezes
+// every card at "Starting" forever, and a hidden project is simply not there.
+const HEALTH = { watchdog: null, watchdogNode: null, devErrors: null, devErrorsNode: null, booted: false };
+let healthAt = 0;
+
+async function loadHealth() {
+  try { S.health = await api('/api/health'); } catch (error) { S.health = null; }
+  readOpenTargets(S.health);
+}
+async function refreshHealth(force) {
+  const now = Date.now();
+  if (!force && now - healthAt < POLL_HEALTH) return;
+  healthAt = now;
+  await loadHealth();
+  renderHealth();
+}
+function stickyBanner(key, nodeKey, message, kind) {
+  if (message === HEALTH[key]) return;                 // unchanged: leave it be
+  HEALTH[key] = message;
+  if (HEALTH[nodeKey]) { HEALTH[nodeKey].remove(); HEALTH[nodeKey] = null; }
+  if (message) HEALTH[nodeKey] = showBanner(message, kind);
+}
+function noteList(title, notes) {
+  const box = el('div', {});
+  box.append(el('div', { style: 'font-weight:650;margin-bottom:4px' }, title));
+  for (const note of notes) box.append(el('div', { class: 'small' }, '· ' + note));
+  return box;
+}
+function renderHealth() {
+  const health = S.health;
+  if (!health) return;
+
+  stickyBanner('watchdog', 'watchdogNode', health.watchdog_error
+    ? 'The status watchdog stopped updating, so these cards may be frozen: ' + health.watchdog_error
+    : null, 'error');
+
+  const devErrors = Array.isArray(health.dev_errors) ? health.dev_errors : [];
+  stickyBanner('devErrors', 'devErrorsNode', devErrors.length
+    ? devErrors.length + (devErrors.length === 1 ? ' project has a dev block Orrery cannot use: ' : ' projects have a dev block Orrery cannot use: ') + devErrors.join('; ')
+    : null, 'error');
+
+  if (HEALTH.booted) return;
+  HEALTH.booted = true;
+
+  const boot = Array.isArray(health.boot_notes) ? health.boot_notes : [];
+  if (boot.length) showBanner(noteList('A previous run left servers behind. On this boot Orrery:', boot), 'warn');
+
+  const hidden = Array.isArray(health.disabled) ? health.disabled : [];
+  const moved = Array.isArray(health.overridden_dirs) ? health.overridden_dirs : [];
+  if (hidden.length || moved.length) {
+    const bits = [];
+    if (hidden.length) bits.push(hidden.length + (hidden.length === 1 ? ' project is hidden' : ' projects are hidden') + ' on this machine: ' + hidden.join(', '));
+    if (moved.length) bits.push((moved.length === 1 ? 'one project reads' : moved.length + ' projects read') + ' from an overridden directory: ' + moved.join(', '));
+    showBanner('launcher.local.json is in effect — ' + bits.join('; ') + '.', 'warn');
+  }
+}
+
+/* ----------------------- open in / context --------------------- */
+
+const OPEN_TARGETS = [
+  { key: 'vscode', label: 'VS Code', icon: 'vscode', missing: 'VS Code is not on PATH (code.cmd).' },
+  { key: 'cursor', label: 'Cursor', icon: 'cursor', missing: 'Cursor is not on PATH (cursor.cmd).' },
+  { key: 'claude', label: 'Claude Code', icon: 'claude', missing: 'The claude CLI was not found.' },
+  { key: 'folder', label: 'Folder', icon: 'folder', missing: 'No file manager could be resolved.' }
+];
+const OPEN_KEYS = OPEN_TARGETS.map(function (target) { return target.key; });
+
+// The launcher resolves these with shutil.which at request time, so the truth is
+// only ever a request away. If it also publishes what it found, use that to
+// disable the buttons up front; if it does not, the buttons stay live and the
+// first 409 teaches us — the message the launcher sends becomes the tooltip.
+function readOpenTargets(source) {
+  if (!source || typeof source !== 'object') return;
+  const table = source.open_targets || source.openers || source.open || source.targets;
+  if (!table || typeof table !== 'object') return;
+  for (const key of OPEN_KEYS) {
+    if (!(key in table)) continue;
+    const value = table[key];
+    let ok = null;
+    let why = '';
+    if (typeof value === 'boolean') ok = value;
+    else if (typeof value === 'string') ok = !!value;
+    else if (value && typeof value === 'object') {
+      const flag = value.available !== undefined ? value.available
+        : value.ok !== undefined ? value.ok
+        : value.found !== undefined ? value.found
+        : value.path !== undefined ? !!value.path : null;
+      ok = flag === null ? null : !!flag;
+      if (typeof value.error === 'string') why = value.error;
+      else if (typeof value.reason === 'string') why = value.reason;
+    } else if (value === null) ok = false;
+    if (ok === null) continue;
+    const known = S.openTargets[key];
+    // A 409 learned in this session outranks a stale "available".
+    if (known && known.ok === false && ok) continue;
+    S.openTargets[key] = { ok: ok, why: why };
+  }
+}
+async function probeOpenTargets() {
+  try { readOpenTargets(await api('/api/open-targets')); } catch (error) { /* optional route */ }
+}
+function openTargetState(key) {
+  const known = S.openTargets[key];
+  if (!known) return { ok: true, why: '' };
+  return known;
+}
+// The confirmation is the button itself going green for a moment. The label is
+// swapped through its own span, never through the button's textContent: these
+// buttons carry an inline SVG, and rewriting textContent would delete it.
+function flashButton(button, label) {
+  if (!button) return;
+  button.classList.add('ok');
+  const slot = label ? button.querySelector('[data-role="label"]') : null;
+  if (slot && !slot.dataset.prev) {
+    slot.dataset.prev = slot.textContent;
+    slot.textContent = label;
+  }
+  clearTimeout(button.flashTimer);
+  button.flashTimer = setTimeout(function () {
+    button.classList.remove('ok');
+    if (slot && slot.dataset.prev) {
+      slot.textContent = slot.dataset.prev;
+      delete slot.dataset.prev;
+    }
+  }, 1300);
+}
+// One launch per project per target at a time. Every one of these spawns a
+// process: Windows Terminal takes about a second to appear, and each click that
+// lands in that window used to be its own wt tab running its own Claude Code
+// session in the same directory — an impatient double-click on the Claude icon
+// bought two sessions, and Folder bought two Explorer windows.
+const OPEN_INFLIGHT = Object.create(null);   // "id|target" -> true while in flight
+async function openIn(project, target, button) {
+  const spec = OPEN_TARGETS.find(function (entry) { return entry.key === target; });
+  const key = project.id + '|' + target;
+  if (OPEN_INFLIGHT[key]) return;
+  OPEN_INFLIGHT[key] = true;
+  // The button goes dead for the round trip rather than only flashing green
+  // after it: the whole gap being guarded is the one before the response.
+  if (button) button.disabled = true;
+  try {
+    await post('/api/open', { id: project.id, target: target });
+    flashButton(button);
+  } catch (error) {
+    // 409 is the launcher's "that executable is not on this machine". Remember
+    // it so every card disables the button instead of offering it again.
+    if (error.status === 409) {
+      S.openTargets[target] = { ok: false, why: error.message || (spec && spec.missing) || 'Not available on this machine.' };
+      showBanner(error.message || (spec ? spec.missing : 'That target is not available.'), 'warn');
+    } else {
+      showError('Could not open ' + project.name + ' in ' + (spec ? spec.label : target) + ': ' + error.message);
+    }
+  } finally {
+    delete OPEN_INFLIGHT[key];
+    if (button) button.disabled = false;
+    // Never a bare re-enable: a 409 just taught us this target is unavailable,
+    // and render() is the one place that decides what a tool button may offer,
+    // for the card and the orbital panel alike.
+    render();
+  }
+}
+async function writeClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (error) { /* permission or focus: the old path still works */ }
+  }
+  const scratch = el('textarea', { style: 'position:fixed;top:-1000px;opacity:0' });
+  scratch.value = text;
+  document.body.append(scratch);
+  scratch.select();
+  const ok = document.execCommand && document.execCommand('copy');
+  scratch.remove();
+  if (!ok) throw new Error('the browser refused the clipboard');
+}
+async function copyContext(project, button) {
+  try {
+    const data = await api('/api/context?id=' + encodeURIComponent(project.id));
+    const text = data && (data.text || data.context || data.briefing);
+    if (!text) throw new Error('the launcher returned an empty briefing');
+    await writeClipboard(String(text));
+    flashButton(button, 'Copied');
+  } catch (error) {
+    showError('Could not copy context for ' + project.name + ': ' + error.message);
+  }
+}
+
+/* ---------------------------- actions -------------------------- */
+
+async function act(project, action) {
+  const id = project.id;
+  S.pending[id] = { want: action === 'stop' ? 'stopping' : 'starting', at: Date.now() };
+  render();
+  try {
+    const result = await post('/api/' + action, { id: id });
+    if (result && result.port && defaultPort(project) && result.port !== defaultPort(project)) {
+      showBanner(project.name + ' started on port ' + result.port + ' because ' + defaultPort(project) + ' was taken.', 'warn');
+    }
+  } catch (error) {
+    delete S.pending[id];
+    if (error.status === 409) showBanner(project.name + ': ' + error.message, 'warn');
+    else showError(project.name + ' could not ' + action + ': ' + error.message);
+  }
+  await loadProjects();
+  scheduleStatus(true);
+}
+async function openProject(project) {
+  try {
+    await post('/api/open', { id: project.id });
+  } catch (error) {
+    showError('Could not open ' + project.name + ': ' + error.message);
+  }
+}
+async function stopAll() {
+  const live = S.projects.filter(function (project) { return isLive(stateOf(project)); });
+  if (!live.length) return;
+  for (const project of live) S.pending[project.id] = { want: 'stopping', at: Date.now() };
+  render();
+  const failures = [];
+  for (const project of live) {
+    try { await post('/api/stop', { id: project.id }); }
+    catch (error) { delete S.pending[project.id]; failures.push(project.name); }
+  }
+  if (failures.length) showError('Could not stop: ' + failures.join(', ') + '. Check the logs.');
+  else showBanner('Stopped ' + live.length + (live.length === 1 ? ' server.' : ' servers.'), 'good');
+  await loadProjects();
+}
+async function quit() {
+  S.quitting = true;
+  if (statusTimer) clearTimeout(statusTimer);
+  if (uptimeTimer) clearInterval(uptimeTimer);
+  stopLogPolling();
+  orbStop();
+  try { await post('/api/quit', {}); } catch (error) {}
+  document.body.className = '';
+  document.body.replaceChildren(el('main', {},
+    el('div', { class: 'page-head', style: 'margin:14vh auto 0;text-align:center' },
+      el('div', { class: 'eyebrow', style: 'justify-content:center' }, 'Orrery is closed'),
+      el('h1', {}, 'Every server it started is stopped.'),
+      el('p', {}, 'Double-click orrery.bat whenever you want the board back.'))));
+  document.title = 'Orrery — stopped';
+}
+
+/* ---------------------------- render --------------------------- */
+
+function visibleProjects() {
+  const query = S.filter.trim().toLowerCase();
+  if (!query) return S.projects;
+  return S.projects.filter(function (project) {
+    const haystack = [project.name, project.id].concat(laneList(project)).join(' ').toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  });
+}
+
+// The orbital view is a second reading of the same data, never a replacement:
+// the setup card, the offline notice and the empty state all belong to the grid,
+// so the toggle silently defers whenever there is nothing to put in orbit.
+function activeView() {
+  if (S.view !== 'orbital') return 'grid';
+  if (!S.loaded || S.offline || !S.projects.length) return 'grid';
+  // A search that matches nothing has an answer, and it is the grid's: "No
+  // project matches …" with a Clear search button. Orbital has no way to say it
+  // — zero bodies on an empty canvas looks like a broken view, not like a
+  // filter, and the only clue would be the text still sitting in the search box.
+  if (S.filter.trim() && !visibleProjects().length) return 'grid';
+  return 'orbital';
+}
+function setView(view) {
+  const next = view === 'orbital' ? 'orbital' : 'grid';
+  if (S.view === next) return;
+  S.view = next;
+  try { localStorage.setItem(VIEW_KEY, next); } catch (error) { /* private mode */ }
+  if (next === 'grid') { ORB.hover = null; orbHideTip(); }
+  render();
+}
+
+function render() {
+  renderHeader();
+  renderPorts();
+  renderGrid();
+  renderOrbital();
+  renderDrawerHead();
+}
+
+function renderHeader() {
+  const running = S.projects.filter(function (project) { return stateOf(project) === 'running'; }).length;
+  const healthy = S.projects.filter(isHealthy).length;
+  const launchable = S.projects.length;
+  const mark = $('mark');
+  mark.classList.toggle('live', healthy > 0);
+  // Green in the header means the same thing it means on a card: something is
+  // actually answering. A running-but-silent server keeps the chip amber.
+  $('runDot').className = 'status-dot' + (healthy ? ' running' : running ? ' unresponsive' : '');
+  $('viewGrid').setAttribute('aria-pressed', S.view === 'orbital' ? 'false' : 'true');
+  $('viewOrbital').setAttribute('aria-pressed', S.view === 'orbital' ? 'true' : 'false');
+  // Total resident memory across every running tree. On a laptop this is the
+  // number that explains why everything else got slow, so it sits next to the
+  // count rather than hiding on the cards.
+  const totalMem = S.projects.reduce(function (sum, project) {
+    const bytes = firstNumber(project.memory_bytes);
+    return sum + (stateOf(project) === 'running' && bytes ? bytes : 0);
+  }, 0);
+  if (!S.loaded) $('runText').textContent = 'Connecting…';
+  else if (S.offline) $('runText').textContent = 'Launcher offline';
+  else if (!launchable) $('runText').textContent = 'Nothing launchable';
+  else {
+    const parts = [el('b', { class: 'num' }, String(running)), ' running of ' + launchable];
+    if (totalMem > 0) {
+      parts.push(el('span', {
+        class: 'run-mem' + (totalMem >= MEM_HEAVY_BYTES * 2 ? ' warn' : ''),
+        title: 'Resident memory across every running project'
+      }, '  ·  ' + fmtBytes(totalMem)));
+    }
+    $('runText').replaceChildren.apply($('runText'), parts);
+  }
+  $('stopAllBtn').disabled = !S.projects.some(function (project) { return isLive(stateOf(project)); });
+  document.title = running ? 'Orrery — ' + running + ' running' : 'Orrery — local launch pad';
+}
+
+function renderPorts() {
+  const strip = $('portStrip');
+  if (!S.projects.length) { strip.hidden = true; strip.replaceChildren(); return; }
+  const ports = new Map();
+  for (const project of S.projects) {
+    for (const port of [defaultPort(project), effectivePort(project)]) {
+      if (port === null) continue;
+      if (!ports.has(port)) ports.set(port, { claimants: [], runner: null, foreign: false });
+      const slot = ports.get(port);
+      if (slot.claimants.indexOf(project.name) === -1) slot.claimants.push(project.name);
+      if (stateOf(project) === 'running' && effectivePort(project) === port) slot.runner = project.name;
+      if (project.port_in_use_by_other && effectivePort(project) === port && stateOf(project) !== 'running') slot.foreign = true;
+    }
+  }
+  const rows = Array.from(ports.entries()).sort(function (a, b) { return a[0] - b[0]; });
+  strip.replaceChildren(el('span', { class: 'port-label' }, 'Ports'));
+  for (const entry of rows) {
+    const port = entry[0];
+    const slot = entry[1];
+    let cls = 'port-chip';
+    let text;
+    if (slot.runner) { cls += ' good'; text = slot.runner; }
+    else if (slot.foreign) { cls += ' warn'; text = 'held outside Orrery'; }
+    else if (slot.claimants.length > 1) { cls += ' warn'; text = 'shared by ' + slot.claimants.join(', '); }
+    else { text = slot.claimants[0] || 'free'; }
+    strip.append(el('span', { class: cls, title: slot.claimants.join(', ') },
+      el('b', {}, ':' + port), el('span', {}, text)));
+  }
+  strip.hidden = false;
+}
+
+function renderGrid() {
+  const grid = $('grid');
+  // Orbital is showing: leave the card DOM exactly as it is rather than patching
+  // nodes nobody can see. S.order still matches the DOM, so coming back is free.
+  if (activeView() === 'orbital') { grid.hidden = true; return; }
+  grid.hidden = false;
+
+  if (!S.loaded) {
+    CARDS.clear();
+    S.order = '';
+    grid.replaceChildren(el('div', { class: 'empty-state span-all' }, 'Reading projects.json…'));
+    return;
+  }
+  if (S.offline || (S.fatal && !S.projects.length) || !S.projects.length) {
+    CARDS.clear();
+    S.order = '';
+    grid.replaceChildren(setupCard());
+    return;
+  }
+
+  const list = visibleProjects();
+  // The key has to tell "no cards, because the filter matched nothing" from "no
+  // cards yet": both are an empty id list, and with one key for both the grid
+  // would stay blank in exactly the case the empty state exists for — arriving
+  // here from Orbital, where S.order is still the '' it was initialised to
+  // because a hidden grid never rebuilt.
+  const orderKey = list.length
+    ? list.map(function (project) { return project.id; }).join('|')
+    : 'empty:' + S.filter.trim();
+
+  // Cards are patched in place so a focused button, an open confirm panel or a
+  // hover state survives the 2s poll. The DOM is only rebuilt when the visible
+  // set actually changes.
+  if (orderKey !== S.order) {
+    for (const id of Array.from(CARDS.keys())) {
+      if (!list.some(function (project) { return project.id === id; })) {
+        CARDS.get(id).root.remove();
+        CARDS.delete(id);
+      }
+    }
+    const nodes = [];
+    for (const project of list) {
+      let entry = CARDS.get(project.id);
+      if (!entry) { entry = buildCard(project); CARDS.set(project.id, entry); }
+      nodes.push(entry.root);
+    }
+    if (!nodes.length) {
+      grid.replaceChildren(el('div', { class: 'empty-state span-all' },
+        el('div', {}, 'No project matches “' + S.filter.trim() + '”.'),
+        el('div', { class: 'actions', style: 'justify-content:center;margin-top:12px' },
+          actionButton('Clear search', function () { $('search').value = ''; S.filter = ''; render(); }, 'btn btn-sm'))));
+    } else {
+      grid.replaceChildren.apply(grid, nodes);
+    }
+    S.order = orderKey;
+  }
+  for (const project of list) {
+    const entry = CARDS.get(project.id);
+    if (entry) updateCard(entry, project);
+  }
+}
+
+function setupCard() {
+  const card = el('article', { class: 'card notice-card span-all' });
+  const localExample = '{\n  "projects_root": "C:/Users/you/Projects"\n}';
+
+  if (S.offline) {
+    card.append(
+      el('div', { class: 'eyebrow' }, 'Not connected'),
+      el('h2', { class: 'notice-title' }, 'The launcher is not answering.'),
+      el('p', {}, OFFLINE_MESSAGE + ' Orrery only ever listens on 127.0.0.1:7345, so nothing outside this machine can reach it.'),
+      el('div', { class: 'actions' }, actionButton('Try again', function () { loadProjects(); }, 'btn btn-primary')));
+    return card;
+  }
+
+  // Not every failure is a missing projects root. /api/projects answers 503 with
+  // root_ok:false when the root cannot be resolved, and 500 when the dataset
+  // itself will not parse — telling someone with a trailing comma in
+  // projects.json to go set an environment variable sends them the wrong way.
+  const rootBroken = !!S.fatal && !(S.fatalData && S.fatalData.root_ok === true)
+    && !!(S.fatalData && (S.fatalData.root_ok === false || S.fatalData.root_error));
+  const dataBroken = !!S.fatal && !rootBroken;
+
+  card.append(
+    el('div', { class: 'eyebrow' }, dataBroken ? 'Dataset problem' : 'Nothing to launch yet'),
+    el('h2', { class: 'notice-title' },
+      rootBroken ? 'Orrery cannot find your projects folder.'
+        : dataBroken ? 'projects.json could not be read.'
+        : 'No project has a dev block yet.'));
+
+  if (S.fatal) card.append(el('div', { class: 'card-note ' + (dataBroken ? 'critical' : 'warn'), style: 'max-width:640px;margin:0 0 16px' }, S.fatal));
+
+  card.append(el('p', {},
+    rootBroken ? 'The projects root is the folder that holds the checkouts. It is deliberately absent from this repository — the repo is public, so machine paths stay out of it. Point Orrery at yours in one of two ways.'
+      : dataBroken ? 'Orrery reads the hub\'s projects.json and nothing else; the message above comes straight from the parser. Fix the file and reload — the launcher re-reads it on its own, so there is nothing to restart.'
+      : 'Orrery lists a project once its entry in projects.json carries a dev block. Add one, reload, and the card appears here.'));
+
+  const steps = el('div', { class: 'notice-steps' });
+  if (rootBroken) {
+    steps.append(
+      el('div', {},
+        el('div', { class: 'step-num' }, '01 · ENVIRONMENT VARIABLE'),
+        el('div', { class: 'step-copy' }, 'Checked first. Good for a one-off run:'),
+        el('pre', { class: 'code-block' }, 'set ORRERY_ROOT=C:\\Users\\you\\Projects\npython launcher\\orrery.py')),
+      el('div', {},
+        el('div', { class: 'step-num' }, '02 · LAUNCHER.LOCAL.JSON'),
+        el('div', { class: 'step-copy' }, 'Checked second, and remembered. Copy launcher/launcher.local.example.json to launcher/launcher.local.json — that filename is git-ignored, so your path never reaches the public repo:'),
+        el('pre', { class: 'code-block' }, localExample)));
+  } else if (dataBroken) {
+    steps.append(el('div', {},
+      el('div', { class: 'step-num' }, 'CHECK THE FILE'),
+      el('div', { class: 'step-copy' }, 'The same file build.py renders the README and api.json from. It has to be valid JSON with a "projects" array:'),
+      el('pre', { class: 'code-block' }, 'python build.py --check')));
+  } else {
+    steps.append(el('div', {},
+      el('div', { class: 'step-num' }, 'ADD TO A PROJECT IN PROJECTS.JSON'),
+      el('div', { class: 'step-copy' }, 'Only portable fields. The folder name is relative to the projects root, never an absolute path:'),
+      el('pre', { class: 'code-block' }, '"dev": {\n  "dir": "my_universe",\n  "command": "npm run dev",\n  "port": 3000,\n  "url": "http://localhost:3000",\n  "kind": "node"\n}')));
+  }
+  card.append(steps, el('div', { class: 'actions' },
+    actionButton('Check again', function () { loadProjects(); refreshHealth(true); }, 'btn btn-primary')));
+  return card;
+}
+
+/* --------------------- reusable control rows -------------------- */
+
+// One definition of "the actions a project has", shared by the card and by the
+// orbital view's selection panel, so the two can never drift apart. `get` reads
+// the live row at click time — the panel's project changes under it.
+function makeActions(get) {
+  const refs = {};
+  refs.main = actionButton('Start', function () {
+    const project = get();
+    if (project) act(project, isLive(stateOf(project)) ? 'stop' : 'start');
+  }, 'btn btn-main btn-primary');
+  refs.restart = actionButton('Restart', function () {
+    const project = get();
+    if (project) act(project, 'restart');
+  }, 'btn btn-sm');
+  refs.open = actionButton('Open', function () {
+    const project = get();
+    if (project) openProject(project);
+  }, 'btn btn-sm');
+  refs.logs = actionButton('Logs', function () {
+    const project = get();
+    if (project) openDrawer(project.id);
+  }, 'btn btn-sm btn-ghost');
+  const node = el('div', { class: 'actions' }, refs.main, refs.restart, refs.open, refs.logs);
+  return { node: node, refs: refs, update: function (project) { updateActions(refs, project); } };
+}
+function updateActions(refs, project) {
+  const state = stateOf(project);
+  const blueprint = dev(project);
+  const live = isLive(state);
+  const busy = project.busy === true || state === 'starting' || state === 'stopping';
+  const missingDir = project.dir_exists === false;
+  refs.main.textContent = state === 'stopping' ? 'Stopping…' : live ? 'Stop'
+    : state === 'crashed' ? 'Start again' : 'Start';
+  refs.main.className = 'btn btn-main ' + (live ? 'btn-stop' : 'btn-primary');
+  // A missing folder disables Start but never Stop: if something is somehow
+  // still running, it must stay stoppable.
+  refs.main.disabled = state === 'stopping' || (missingDir && !live);
+  refs.main.title = missingDir && !live ? (project.error || 'The project folder is missing.') : '';
+  refs.restart.disabled = !live || busy || missingDir;
+  refs.open.disabled = !blueprint.url && !project.url;
+  refs.open.title = (project.url || blueprint.url || 'No url in the dev block');
+  refs.logs.textContent = DRAWER.id === project.id ? 'Logs ●' : 'Logs';
+}
+
+// Open-in row plus Copy context. The launcher owns the directory: these only
+// ever send an id and a target name, never a path.
+function makeTools(get, className) {
+  const refs = { targets: Object.create(null) };
+  const node = el('div', { class: className || 'card-tools' });
+  for (const spec of OPEN_TARGETS) {
+    const button = el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Open in ' + spec.label },
+      ICONS[spec.icon]());
+    button.addEventListener('click', function () {
+      const project = get();
+      if (project) openIn(project, spec.key, button);
+    });
+    refs.targets[spec.key] = button;
+    node.append(button);
+  }
+  refs.copyLabel = el('span', { 'data-role': 'label' }, 'Copy context');
+  refs.copy = el('button', { class: 'btn btn-sm btn-ghost', type: 'button',
+    title: 'Copy a paste-ready briefing about this project' }, ICONS.copy(), refs.copyLabel);
+  refs.copy.addEventListener('click', function () {
+    const project = get();
+    if (project) copyContext(project, refs.copy);
+  });
+  node.append(el('span', { class: 'tool-spacer' }), refs.copy);
+  return {
+    node: node,
+    refs: refs,
+    update: function (project) {
+      const missingDir = project.dir_exists === false;
+      for (const spec of OPEN_TARGETS) {
+        const button = refs.targets[spec.key];
+        const available = openTargetState(spec.key);
+        button.disabled = !available.ok || missingDir;
+        button.title = missingDir ? (project.error || 'The project folder is missing.')
+          : available.ok ? 'Open in ' + spec.label
+          : (available.why || spec.missing);
+      }
+      refs.copy.disabled = false;
+    }
+  };
+}
+
+// branch · uncommitted count · ahead/behind. Silent for a clean tree, and
+// entirely absent when the directory is not a repository at all.
+function makeGitRow() {
+  const node = el('div', { class: 'git-row', hidden: 'hidden' });
+  let key = '';
+  return {
+    node: node,
+    update: function (project) {
+      const info = gitInfo(project);
+      const next = info ? [info.branch, info.detached, info.dirty, info.ahead, info.behind, info.error].join('|') : '';
+      if (next === key) return;
+      key = next;
+      if (!info) { node.hidden = true; node.replaceChildren(); return; }
+      const chips = [];
+      // A detached HEAD is not a branch. The launcher fills the branch field with
+      // the short commit oid when it is one, so it is named as what it is rather
+      // than styled and captioned like a branch — a bare "da58d97" in the branch
+      // slot reads as a branch called da58d97. No branch at all means a git call
+      // that did not come back cleanly; the message is the tooltip either way.
+      const label = info.detached ? (info.branch ? 'detached @ ' + info.branch : 'detached')
+        : info.branch ? info.branch
+        : info.error ? 'git' : 'detached';
+      chips.push(el('span', { class: 'git-chip' + (info.detached ? ' detached' : ''),
+        title: info.error || (info.detached ? 'Detached HEAD — not on any branch' : 'Current branch') },
+        ICONS.branch(), label));
+      if (info.dirty) {
+        chips.push(el('span', { class: 'git-chip dirty', title: 'Uncommitted changes' },
+          el('span', { class: 'git-dot' }), info.dirty > 0 ? String(info.dirty) : 'dirty'));
+      }
+      if (info.ahead > 0) {
+        chips.push(el('span', { class: 'git-chip ahead', title: info.ahead + ' commit(s) ahead of upstream' },
+          ICONS.arrowUp(), String(info.ahead)));
+      }
+      if (info.behind > 0) {
+        chips.push(el('span', { class: 'git-chip behind', title: info.behind + ' commit(s) behind upstream' },
+          ICONS.arrowDown(), String(info.behind)));
+      }
+      node.replaceChildren.apply(node, chips);
+      node.hidden = false;
+    }
+  };
+}
+
+function buildCard(project) {
+  const refs = {};
+  const get = function () { return currentProject(project.id); };
+  refs.rail = el('span', { class: 'card-rail', 'aria-hidden': 'true' });
+  refs.name = el('h2', { class: 'card-name' }, project.name || project.id);
+  refs.lanes = el('div', { class: 'card-lanes' });
+  refs.dot = el('span', { class: 'status-dot', 'aria-hidden': 'true' });
+  refs.stateLabel = el('span', { class: 'state-label' }, '—');
+  refs.tagline = el('p', { class: 'card-tagline' }, project.tagline || '');
+  refs.git = makeGitRow();
+  refs.port = el('span', { class: 'meta-v num' }, '—');
+  refs.uptime = el('span', { class: 'meta-v num' }, '—');
+  refs.pid = el('span', { class: 'meta-v num' }, '—');
+  refs.pidWrap = el('span', { class: 'meta' }, el('span', { class: 'meta-k' }, 'pid'), refs.pid);
+  refs.probe = el('span', { class: 'meta-v num' }, '—');
+  refs.probeWrap = el('span', { class: 'meta', hidden: 'hidden' }, el('span', { class: 'meta-k' }, 'probe'), refs.probe);
+  // Resident memory for the whole process tree. Hidden until there is a
+  // reading, so a stopped card does not carry a meaningless zero.
+  refs.mem = el('span', { class: 'meta-v num' }, '—');
+  refs.memWrap = el('span', { class: 'meta', hidden: 'hidden' }, el('span', { class: 'meta-k' }, 'memory'), refs.mem);
+  refs.cmd = el('code', { class: 'card-cmd' }, '');
+  refs.note = el('div', { class: 'card-note', hidden: 'hidden' }, '');
+  refs.actions = makeActions(get);
+  refs.tools = makeTools(get);
+
+  const root = el('article', { class: 'card project-card', 'data-state': 'stopped' },
+    refs.rail,
+    el('div', { class: 'card-head' },
+      el('div', { class: 'card-ident' }, refs.name, refs.lanes),
+      el('div', { class: 'card-status' }, refs.dot, refs.stateLabel)),
+    refs.tagline,
+    refs.git.node,
+    el('div', { class: 'card-meta' },
+      el('span', { class: 'meta' }, el('span', { class: 'meta-k' }, 'port'), refs.port),
+      el('span', { class: 'meta' }, el('span', { class: 'meta-k' }, 'uptime'), refs.uptime),
+      refs.memWrap,
+      refs.pidWrap,
+      refs.probeWrap),
+    refs.cmd,
+    refs.note,
+    el('div', { class: 'card-actions' }, refs.actions.node),
+    refs.tools.node);
+
+  return { root: root, refs: refs, uptimeBase: null, uptimeAt: 0, state: null };
+}
+
+function currentProject(id) {
+  return S.projects.find(function (project) { return project.id === id; }) || { id: id, name: id };
+}
+
+function updateCard(entry, project) {
+  const refs = entry.refs;
+  const state = viewState(project);       // what the dot is allowed to claim
+  const control = stateOf(project);       // what the launcher says is true
+  const probe = healthInfo(project);
+  const blueprint = dev(project);
+  const port = effectivePort(project);
+  const base = defaultPort(project);
+
+  entry.root.dataset.state = state;
+  refs.name.textContent = project.name || project.id;
+  refs.tagline.textContent = project.tagline || '';
+  refs.dot.className = 'status-dot ' + dotClass(state);
+  refs.stateLabel.className = 'state-label ' + state;
+  refs.stateLabel.textContent = STATE_LABEL[state] || state;
+  refs.git.update(project);
+
+  const laneKey = laneList(project).join(',') + '|' + (blueprint.kind || '');
+  if (entry.laneKey !== laneKey) {
+    entry.laneKey = laneKey;
+    refs.lanes.replaceChildren();
+    for (const lane of laneList(project)) refs.lanes.append(el('span', { class: 'chip lane' }, lane));
+    if (blueprint.kind) refs.lanes.append(el('span', { class: 'chip kind' }, blueprint.kind));
+    // Local-only projects come from the git-ignored launcher.local.json and
+    // exist on this machine alone. Saying so on the card is the point: it is
+    // how you know at a glance that nothing about it is published.
+    if (project.local_only) {
+      refs.lanes.append(el('span', {
+        class: 'chip warn',
+        title: 'Defined in launcher.local.json. Not in the public dataset.'
+      }, 'local'));
+    }
+  }
+
+  refs.port.textContent = port === null ? '—' : String(port);
+  refs.port.className = 'meta-v num' + (state === 'running' ? ' on' : '');
+  refs.pidWrap.hidden = !project.pid;
+  if (project.pid) refs.pid.textContent = String(project.pid);
+  refs.probeWrap.hidden = !probe;
+  if (probe) {
+    refs.probe.textContent = probeSummary(probe);
+    refs.probe.className = 'meta-v num' + (probe.kind === 'ok' ? ' on' : '');
+    refs.probeWrap.title = probeTitle(project, probe);
+  }
+
+  if (control === 'running' && typeof project.uptime_secs === 'number') {
+    entry.uptimeBase = project.uptime_secs;
+    entry.uptimeAt = Date.now();
+    refs.uptime.textContent = fmtUptime(project.uptime_secs);
+  } else {
+    entry.uptimeBase = null;
+    refs.uptime.textContent = '—';
+  }
+
+  const bytes = firstNumber(project.memory_bytes);
+  const hasMem = control === 'running' && bytes !== null && bytes > 0;
+  refs.memWrap.hidden = !hasMem;
+  if (hasMem) {
+    refs.mem.textContent = fmtBytes(bytes);
+    // Heavy is not an error, it is a fact about a laptop with finite RAM.
+    refs.mem.className = 'meta-v num' + (bytes >= MEM_HEAVY_BYTES ? ' warn' : '');
+    refs.memWrap.title = bytes >= MEM_HEAVY_BYTES
+      ? 'Resident memory for this process tree. Over ' + fmtBytes(MEM_HEAVY_BYTES)
+        + ', so worth stopping when you are not using it.'
+      : 'Resident memory for this process tree, not just the tracked child.';
+  }
+
+  const command = [blueprint.dir, blueprint.command].filter(Boolean).join('  ·  ');
+  refs.cmd.textContent = command;
+  refs.cmd.title = command;
+  refs.cmd.hidden = !command;
+
+  // Contextual note: one line, the most useful one for the current state.
+  // A missing directory outranks everything — the card would otherwise render as
+  // an ordinary healthy "Stopped" with a live Start button that can only 404.
+  let note = '';
+  let noteClass = 'card-note';
+  const missingDir = project.dir_exists === false;
+  const rivals = S.projects.filter(function (other) {
+    return other.id !== project.id && base !== null && defaultPort(other) === base;
+  }).map(function (other) { return other.name; });
+
+  if (missingDir) {
+    noteClass += ' critical';
+    note = (project.error || 'The project folder is missing.')
+      + ' Nothing can start until that path exists — check the projects root, or set project_dirs in launcher.local.json.';
+  } else if (state === 'crashed') {
+    noteClass += ' critical';
+    const code = project.last_exit_code;
+    note = 'Exited with code ' + (code === null || code === undefined ? '?' : code) + '. The logs still hold the last output.'
+      + (blueprint.requires ? ' Needs ' + blueprint.requires + '.' : '');
+  } else if (state === 'held') {
+    noteClass += ' warn';
+    // held_by names the holder: a sibling project Orrery started, or the pid and
+    // image of a stranger. "Something Orrery did not start" was neither.
+    const holder = project.held_by || 'a process Orrery did not start';
+    note = 'Port ' + (base === null ? '?' : base) + ' is held by ' + holder + '. '
+      + (blueprint.can_relocate ? 'Starting will try the next free port.'
+        : project.name + ' has no way to run on another port, so starting will fail until that port is free.');
+  } else if (state === 'unresponsive') {
+    noteClass += ' warn';
+    // The whole point of the probe: a live pid is not a working server.
+    note = probe
+      ? 'Process up, not responding. ' + probeTitle(project, probe)
+        + (blueprint.requires ? ' It needs ' + blueprint.requires + '.' : ' The logs usually say why.')
+      : 'Process up, but no health probe has come back for it yet.';
+  } else if (control === 'running' && base !== null && port !== null && port !== base) {
+    noteClass += ' accent';
+    note = 'Moved to ' + port + ' — its default ' + base + ' was taken.';
+  } else if (!isLive(control) && blueprint.requires) {
+    // schema.json calls this "shown to the user"; it used to reach the log ring
+    // buffer only, and only after a start had already failed for want of it.
+    note = 'Needs ' + blueprint.requires + ' before it will come up.';
+  } else if (state === 'stopped' && rivals.length) {
+    note = 'Shares port ' + base + ' with ' + rivals.join(', ') + '. First one up keeps it.';
+  }
+  refs.note.className = noteClass;
+  refs.note.textContent = note;
+  refs.note.hidden = !note;
+
+  refs.actions.update(project);
+  refs.tools.update(project);
+}
+
+function probeSummary(probe) {
+  if (!probe) return '—';
+  if (probe.kind !== 'ok') return probe.httpStatus !== null ? String(probe.httpStatus) : probe.raw;
+  const bits = [probe.httpStatus !== null ? String(probe.httpStatus) : 'ok'];
+  if (probe.latency !== null) bits.push(Math.round(probe.latency) + ' ms');
+  return bits.join(' · ');
+}
+function probeTitle(project, probe) {
+  const url = projectUrl(project);
+  const where = url ? 'GET ' + url : 'The health probe';
+  if (!probe) return where + ' has not been tried yet.';
+  if (probe.kind === 'ok') {
+    return where + ' answered ' + (probe.httpStatus !== null ? probe.httpStatus : 'ok')
+      + (probe.latency !== null ? ' in ' + Math.round(probe.latency) + ' ms' : '') + '.';
+  }
+  if (probe.detail) return where + ': ' + probe.detail;
+  if (probe.kind === 'unreachable') return where + ' got no answer within the timeout.';
+  return where + ' failed' + (probe.httpStatus !== null ? ' with HTTP ' + probe.httpStatus : '') + '.';
+}
+
+function tickUptimes() {
+  if (document.hidden) return;
+  const now = Date.now();
+  for (const entry of CARDS.values()) {
+    if (entry.uptimeBase === null) continue;
+    entry.refs.uptime.textContent = fmtUptime(entry.uptimeBase + (now - entry.uptimeAt) / 1000);
+  }
+  // The orbital panel and tooltip carry an uptime too, and they are DOM: they
+  // tick on this timer rather than costing the canvas a frame.
+  if (activeView() === 'orbital') {
+    if (ORB.panel && ORB.selected) {
+      const seconds = liveUptime(currentProject(ORB.selected));
+      if (seconds !== null) ORB.panel.uptime.textContent = '  ·  ' + fmtUptime(seconds);
+    }
+    if (ORB.hover) {
+      const body = ORB.bodies.get(ORB.hover);
+      if (body && body.x !== undefined && !$('orbTip').hidden) orbShowTip(body);
+    }
+  }
+}
+
+// Uptime that keeps counting between polls, for the two places that are not a
+// card: the orbital panel and the orbital tooltip.
+const UPTIME = new Map();
+function noteUptime(project) {
+  if (stateOf(project) === 'running' && typeof project.uptime_secs === 'number') {
+    const known = UPTIME.get(project.id);
+    if (!known || known.base !== project.uptime_secs) {
+      UPTIME.set(project.id, { base: project.uptime_secs, at: Date.now() });
+    }
+  } else {
+    UPTIME.delete(project.id);
+  }
+}
+function liveUptime(project) {
+  const known = project && UPTIME.get(project.id);
+  if (!known) return null;
+  return known.base + (Date.now() - known.at) / 1000;
+}
+
+/* ----------------------------- logs ---------------------------- */
+
+const ANSI_OSC = /\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)/g;
+const ANSI_CSI = /\u001b\[[0-?]*[ -\/]*[@-~]/g;
+const ANSI_SINGLE = /\u001b[@-Z\\-_]/g;
+const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f]/g;
+
+function stripAnsi(text) {
+  let out = String(text).replace(ANSI_OSC, '').replace(ANSI_CSI, '').replace(ANSI_SINGLE, '');
+  const carriage = out.lastIndexOf('\r');
+  if (carriage !== -1) out = out.slice(carriage + 1);   // progress bars rewrite one line
+  return out.replace(CONTROL, '');
+}
+function lineText(line) {
+  if (typeof line === 'string') return line;
+  if (line && typeof line === 'object') return String(line.text || line.line || line.message || '');
+  return String(line === null || line === undefined ? '' : line);
+}
+function lineClass(line, text) {
+  const stream = line && typeof line === 'object' ? String(line.stream || '') : '';
+  if (/^\s*[\[(]?(orrery|launcher)\b/i.test(text)) return 'log-line meta';
+  if (/\b(error|exception|traceback|fatal|eaddrinuse|failed)\b/i.test(text)) return 'log-line err';
+  if (stream === 'stderr' || /\bwarn(ing)?\b/i.test(text)) return 'log-line warn';
+  return 'log-line';
+}
+
+function openDrawer(id) {
+  DRAWER.id = id;
+  DRAWER.cursor = 0;
+  DRAWER.follow = true;
+  DRAWER.lines = 0;
+  $('logBody').replaceChildren(el('span', { class: 'log-line log-empty' }, 'Waiting for output…'));
+  $('drawer').classList.add('open');
+  $('drawer').setAttribute('aria-hidden', 'false');
+  document.body.classList.add('drawer-open');
+  $('jumpBtn').hidden = true;
+  renderDrawerHead();
+  render();
+  restartLogPolling();
+}
+function closeDrawer() {
+  stopLogPolling();
+  DRAWER.gen++;
+  DRAWER.id = null;
+  $('drawer').classList.remove('open');
+  $('drawer').setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('drawer-open');
+  render();
+}
+function stopLogPolling() {
+  if (DRAWER.timer) { clearTimeout(DRAWER.timer); DRAWER.timer = null; }
+}
+// The only way to (re)start the chain: cancel the pending tick, then retire the
+// generation so nothing already in flight can schedule a successor.
+function restartLogPolling() {
+  stopLogPolling();
+  DRAWER.gen++;
+  pollLogs();
+}
+function renderDrawerHead() {
+  if (!DRAWER.id) return;
+  const project = currentProject(DRAWER.id);
+  const state = stateOf(project);
+  const port = effectivePort(project);
+  $('drawerTitle').textContent = project.name || project.id;
+  $('drawerSub').replaceChildren(
+    el('span', {}, STATE_LABEL[state] || state),
+    port !== null ? el('span', { class: 'mono num' }, '  ·  :' + port) : null,
+    project.pid ? el('span', { class: 'mono num' }, '  ·  pid ' + project.pid) : null);
+  const follow = $('followBtn');
+  follow.textContent = DRAWER.follow ? 'Following' : 'Paused';
+  follow.className = 'btn btn-sm' + (DRAWER.follow ? ' btn-primary' : '');
+}
+async function pollLogs() {
+  const gen = DRAWER.gen;
+  const id = DRAWER.id;
+  // busyGen, not a bare busy flag: a request in flight for a retired generation
+  // must not stop the current one from starting, or the new chain never arms.
+  if (!id || DRAWER.busyGen === gen) return;
+  if (document.hidden) {
+    DRAWER.timer = setTimeout(function () { if (DRAWER.gen === gen) pollLogs(); }, POLL_LOGS * 4);
+    return;
+  }
+  DRAWER.busyGen = gen;
+  try {
+    const data = await api('/api/logs?id=' + encodeURIComponent(id) + '&since=' + DRAWER.cursor);
+    if (DRAWER.id !== id || DRAWER.gen !== gen) return;
+    const lines = (data && (data.lines || data.log || data.items)) || [];
+    const cursor = data && (data.cursor !== undefined ? data.cursor : data.next !== undefined ? data.next : data.since);
+    if (typeof cursor === 'number') {
+      if (cursor < DRAWER.cursor) { $('logBody').replaceChildren(); DRAWER.lines = 0; }
+      DRAWER.cursor = cursor;
+    } else {
+      DRAWER.cursor += lines.length;
+    }
+    if (data && data.dropped) appendLines(['[orrery] ' + data.dropped + ' earlier lines dropped from the buffer']);
+    if (lines.length) appendLines(lines);
+    else if (!DRAWER.lines) showLogPlaceholder(id);
+  } catch (error) {
+    if (DRAWER.id === id && DRAWER.gen === gen && !DRAWER.lines) {
+      $('logBody').replaceChildren(el('span', { class: 'log-line err' }, 'Could not read the log buffer: ' + error.message));
+    }
+  } finally {
+    if (DRAWER.busyGen === gen) DRAWER.busyGen = -1;
+  }
+  if (DRAWER.id && DRAWER.gen === gen) DRAWER.timer = setTimeout(function () { pollLogs(); }, POLL_LOGS);
+}
+function showLogPlaceholder(id) {
+  const project = currentProject(id);
+  const state = stateOf(project);
+  const message = state === 'running' || state === 'starting'
+    ? 'Running quietly. Output appears here as it arrives.'
+    : state === 'held'
+      ? 'Orrery did not start this one — the port is held by another process, so there is nothing to tail.'
+      : 'No output yet. Start the server to see its logs.';
+  $('logBody').replaceChildren(el('span', { class: 'log-line log-empty' }, message));
+}
+function appendLines(lines) {
+  const body = $('logBody');
+  if (!DRAWER.lines) body.replaceChildren();
+  const fragment = document.createDocumentFragment();
+  let added = 0;
+  for (const raw of lines) {
+    for (const piece of lineText(raw).split(/\r?\n/)) {
+      const text = stripAnsi(piece);
+      if (!text && !piece) continue;
+      fragment.append(el('span', { class: lineClass(raw, text) }, text || ' '));
+      added++;
+    }
+  }
+  if (!added) return;
+  body.append(fragment);
+  DRAWER.lines += added;
+  while (DRAWER.lines > MAX_LOG_LINES && body.firstChild) { body.firstChild.remove(); DRAWER.lines--; }
+  if (DRAWER.follow) body.scrollTop = body.scrollHeight;
+}
+
+/* --------------------------- orbital --------------------------- */
+
+/* A second reading of the same data: one canvas, one requestAnimationFrame
+ * loop, and a hard rule about when that loop is allowed to exist. It runs only
+ * while the tab is visible, the view is on screen, motion is not reduced, and
+ * at least one body is actually in flight. The moment the last server stops the
+ * loop returns without rescheduling itself and the picture freezes exactly
+ * where it was — an idle Orrery draws no frames at all. Anything that changes
+ * the picture without animating it (hover, selection, a poll that moved a
+ * state) asks for exactly one frame through orbKick().
+ */
+
+const TAU = Math.PI * 2;
+const ORB_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+// graphics innermost, then fullstack, ai, systems — anything else falls to the
+// outer band. A project in several lanes sits in the innermost one it belongs to.
+const LANE_BANDS = ['graphics', 'fullstack', 'ai', 'systems'];
+const BAND_NAMES = LANE_BANDS.concat(['other']);
+
+const TOK = {};      // the page's own design tokens, read once, never duplicated
+const RGB = {};
+function readTokens() {
+  const style = getComputedStyle(document.documentElement);
+  const names = { bg: '--bg', surface: '--surface', surface2: '--surface-2', line: '--line',
+    lineStrong: '--line-strong', text: '--text', text2: '--text-2', muted: '--muted',
+    accent: '--accent', accentLift: '--accent-lift', good: '--good', warn: '--warn', critical: '--critical' };
+  for (const key in names) TOK[key] = (style.getPropertyValue(names[key]) || '').trim() || '#ffffff';
+  for (const key in TOK) RGB[key] = hexToRgb(TOK[key]);
+}
+function hexToRgb(value) {
+  const hex = String(value).trim();
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex);
+  if (!match) return '255,255,255';
+  let body = match[1];
+  if (body.length === 3) body = body[0] + body[0] + body[1] + body[1] + body[2] + body[2];
+  return parseInt(body.slice(0, 2), 16) + ',' + parseInt(body.slice(2, 4), 16) + ',' + parseInt(body.slice(4, 6), 16);
+}
+function rgba(key, alpha) { return 'rgba(' + (RGB[key] || '255,255,255') + ',' + alpha + ')'; }
+
+const ORB = {
+  canvas: null, ctx: null,
+  w: 0, h: 0, dpr: 1,
+  geo: null,
+  bodies: new Map(),        // id -> {angle, band, bandIndex, slot, slots, x, y, radius}
+  list: [],                 // the visible projects, in draw order
+  bandCount: 1,
+  bands: [],
+  selected: null,
+  hover: null,
+  raf: null, last: 0, time: 0,
+  sig: '', dirty: true, frames: 0,
+  reduced: false, ready: false, panel: null
+};
+// Proof hook for the idle-cost claim: __orrery.frames() must stop climbing the
+// moment nothing is running, and while the tab is hidden.
+window.__orrery = {
+  frames: function () { return ORB.frames; },
+  animating: function () { return orbAnimating(); }
+};
+
+function bandOf(project) {
+  const lanes = laneList(project).map(function (lane) { return lane.toLowerCase(); });
+  for (let i = 0; i < LANE_BANDS.length; i++) {
+    if (lanes.indexOf(LANE_BANDS[i]) !== -1) return i;
+  }
+  return LANE_BANDS.length;
+}
+function orbSpeed(state, radius) {
+  const base = state === 'running' ? 1
+    : state === 'starting' || state === 'waking' || state === 'stopping' ? 0.62
+    : state === 'unresponsive' ? 0.44
+    : state === 'stopped' ? 0.2
+    : 0;                                   // crashed and port-held do not orbit
+  if (!base) return 0;
+  return base * 26 / Math.max(46, radius); // inner bands sweep faster, as they should
+}
+function orbAnimating() {
+  if (ORB.reduced || document.hidden || activeView() !== 'orbital') return false;
+  return ORB.list.some(function (project) { return MOVING_STATES[viewState(project)] === 1; });
+}
+function orbStop() {
+  if (ORB.raf !== null) { cancelAnimationFrame(ORB.raf); ORB.raf = null; }
+  ORB.last = 0;
+}
+function orbKick() {
+  if (ORB.raf !== null || !ORB.ready || activeView() !== 'orbital') return;
+  ORB.raf = requestAnimationFrame(orbFrame);
+}
+function orbFrame(timestamp) {
+  ORB.raf = null;
+  const animating = orbAnimating();
+  if (animating) {
+    const dt = ORB.last ? Math.min(0.05, (timestamp - ORB.last) / 1000) : 0;
+    ORB.last = timestamp;
+    ORB.time += dt;
+    orbAdvance(dt);
+  } else {
+    ORB.last = 0;
+  }
+  const signature = orbSignature();
+  if (animating || ORB.dirty || signature !== ORB.sig) {
+    orbDraw();
+    ORB.sig = signature;
+    ORB.dirty = false;
+    ORB.frames++;
+  }
+  if (animating) ORB.raf = requestAnimationFrame(orbFrame);
+}
+function orbSignature() {
+  const parts = [ORB.selected || '', ORB.hover || '', ORB.w, ORB.h];
+  for (const project of ORB.list) parts.push(project.id + ':' + viewState(project));
+  return parts.join('|');
+}
+function orbAdvance(dt) {
+  if (!ORB.geo) return;
+  for (const project of ORB.list) {
+    const body = ORB.bodies.get(project.id);
+    if (!body) continue;
+    const radius = ORB.geo.radii[body.bandIndex] || 0;
+    body.angle = (body.angle + orbSpeed(viewState(project), radius) * dt) % TAU;
+  }
+}
+
+function orbEnsure() {
+  if (ORB.ready) return;
+  const canvas = $('orbitalCanvas');
+  if (!canvas) return;
+  ORB.canvas = canvas;
+  ORB.ctx = canvas.getContext('2d');
+  ORB.ready = true;
+
+  const motion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  ORB.reduced = !!(motion && motion.matches);
+  if (motion) {
+    const onChange = function () { ORB.reduced = motion.matches; ORB.dirty = true; orbStop(); orbKick(); };
+    if (motion.addEventListener) motion.addEventListener('change', onChange);
+    else if (motion.addListener) motion.addListener(onChange);
+  }
+
+  // Observe the canvas itself, not its bordered wrapper: the wrapper's box is
+  // two pixels wider than the drawing surface, and sizing to it stretches the
+  // backing store by just enough to soften every hairline.
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { orbResize(); }).observe(canvas);
+  } else {
+    window.addEventListener('resize', orbResize);
+  }
+  // devicePixelRatio changes when the window moves between monitors; matchMedia
+  // is the only event for it, and the query has to be rebuilt after each hit.
+  watchPixelRatio();
+
+  canvas.addEventListener('pointermove', function (event) {
+    if (event.pointerType === 'touch') return;
+    const point = orbPoint(event);
+    const body = orbHitTest(point.x, point.y);
+    const id = body ? body.id : null;
+    canvas.classList.toggle('hot', !!body);
+    if (id !== ORB.hover) { ORB.hover = id; orbKick(); }
+    if (body) orbShowTip(body); else orbHideTip();
+  });
+  canvas.addEventListener('pointerleave', function () {
+    canvas.classList.remove('hot');
+    if (ORB.hover) { ORB.hover = null; orbKick(); }
+    orbHideTip();
+  });
+  canvas.addEventListener('click', function (event) {
+    const point = orbPoint(event);
+    const body = orbHitTest(point.x, point.y);
+    // Selecting also takes focus, because the keyboard shortcuts are the
+    // canvas's own: without this, "space start/stop" would only answer after a
+    // Tab, and clicking a body would leave focus on <body>.
+    if (canvas.focus) canvas.focus({ preventScroll: true });
+    orbSelect(body ? body.id : null);
+  });
+  // Deliberately no dblclick action. It used to start or stop the server under
+  // the pointer: an unconfirmed, undiscoverable toggle on a ~5px target that the
+  // on-screen hint never mentioned, so a second click aimed at selecting a body
+  // launched it instead. Starting and stopping is the panel's Start/Stop button
+  // and the space key, both of which name what they will act on first.
+  orbResize();
+}
+function watchPixelRatio() {
+  if (!window.matchMedia) return;
+  const query = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+  const once = function () {
+    orbResize();
+    watchPixelRatio();
+  };
+  if (query.addEventListener) query.addEventListener('change', once, { once: true });
+  else if (query.addListener) query.addListener(once);
+}
+function orbPoint(event) {
+  const rect = ORB.canvas.getBoundingClientRect();
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+function orbResize() {
+  if (!ORB.ready || !ORB.canvas) return;
+  const rect = ORB.canvas.getBoundingClientRect();
+  if (rect.width < 2 || rect.height < 2) return;         // hidden: nothing to size
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const w = Math.round(rect.width);
+  const h = Math.round(rect.height);
+  if (w === ORB.w && h === ORB.h && dpr === ORB.dpr) return;
+  ORB.w = w; ORB.h = h; ORB.dpr = dpr;
+  ORB.canvas.width = Math.round(w * dpr);                // resets the context state
+  ORB.canvas.height = Math.round(h * dpr);
+  ORB.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);            // …so the transform goes last
+  orbGeometry();
+  ORB.dirty = true;
+  orbKick();
+}
+function orbGeometry() {
+  const count = Math.max(1, ORB.bandCount);
+  const pad = ORB.w < 560 ? 32 : 58;
+  const maxR = Math.max(52, Math.min(ORB.w, ORB.h) / 2 - pad);
+  const coreR = Math.max(7, Math.min(13, maxR * 0.075));
+  // The innermost band starts well clear of the core, and the rest divide the
+  // remaining space evenly, so two lanes read as two bands rather than as one
+  // ring huddled against the middle and one out at the rim.
+  const inner = Math.min(maxR * 0.75, Math.max(coreR + 30, maxR * 0.42));
+  const radii = [];
+  for (let i = 0; i < count; i++) {
+    radii.push(count === 1 ? maxR * 0.66 : inner + i * (maxR - inner) / (count - 1));
+  }
+  ORB.geo = { cx: ORB.w / 2, cy: ORB.h / 2, maxR: maxR, coreR: coreR, radii: radii };
+}
+
+function orbLayout() {
+  const list = visibleProjects();
+  ORB.list = list;
+  const seen = Object.create(null);
+  const groups = new Map();
+  for (const project of list) {
+    seen[project.id] = true;
+    const band = bandOf(project);
+    if (!groups.has(band)) groups.set(band, []);
+    groups.get(band).push(project);
+  }
+  for (const id of Array.from(ORB.bodies.keys())) {
+    if (!seen[id]) ORB.bodies.delete(id);
+  }
+  if (ORB.selected && !seen[ORB.selected]) ORB.selected = null;
+  if (ORB.hover && !seen[ORB.hover]) ORB.hover = null;
+
+  const bands = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
+  const changed = bands.length !== ORB.bandCount;
+  ORB.bands = bands;
+  ORB.bandCount = Math.max(1, bands.length);
+  if (changed || !ORB.geo) orbGeometry();
+
+  bands.forEach(function (band, bandIndex) {
+    const members = groups.get(band);
+    members.forEach(function (project, slot) {
+      let body = ORB.bodies.get(project.id);
+      if (!body) {
+        // Even spread on arrival; each band gets its own phase so the rings do
+        // not line up into a spoke, plus a constant nudge that keeps a body from
+        // starting life sitting on its own band's label. After that every body
+        // keeps its own angle and its own period.
+        body = { id: project.id, angle: (slot / members.length) * TAU + bandIndex * 0.65 + 0.35 };
+        ORB.bodies.set(project.id, body);
+      }
+      body.band = band;
+      body.bandIndex = bandIndex;
+      body.slot = slot;
+      body.slots = members.length;
+    });
+  });
+}
+
+/* ---- drawing ---- */
+
+function orbDraw() {
+  const ctx = ORB.ctx;
+  if (!ctx || !ORB.geo) return;
+  const geo = ORB.geo;
+  const cx = geo.cx;
+  const cy = geo.cy;
+  ctx.clearRect(0, 0, ORB.w, ORB.h);
+  ctx.lineCap = 'round';
+
+  const labelRects = [];
+  const small = ORB.w < 560;
+
+  // ---- orbit rings, one per lane band, each with a gap for its name
+  ctx.font = '700 9px ' + ORB_FONT;
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < ORB.bands.length; i++) {
+    const radius = geo.radii[i];
+    const name = (BAND_NAMES[ORB.bands[i]] || 'other').toUpperCase();
+    const width = small ? 0 : ctx.measureText(name).width;
+    const gap = width ? Math.min(1.1, (width / 2 + 7) / radius) : 0;
+    ctx.strokeStyle = TOK.line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, Math.PI / 2 + gap, Math.PI / 2 - gap + TAU);
+    ctx.stroke();
+    if (width) {
+      ctx.fillStyle = rgba('muted', .72);
+      ctx.textAlign = 'center';
+      ctx.fillText(name, cx, cy + radius + 0.5);
+      labelRects.push({ x: cx - width / 2 - 4, y: cy + radius - 7, w: width + 8, h: 14 });
+    }
+  }
+
+  // ---- core: green only when something is genuinely answering, like the mark
+  const healthy = ORB.list.filter(isHealthy).length;
+  const live = ORB.list.filter(function (project) { return MOVING_STATES[viewState(project)] === 1; }).length;
+  const coreKey = healthy ? 'good' : live ? 'warn' : 'muted';
+  const intensity = healthy ? 1 : live ? .7 : .3;
+  ctx.save();
+  ctx.shadowColor = rgba(coreKey, .55 * intensity);
+  ctx.shadowBlur = geo.coreR * 2.4;
+  ctx.fillStyle = TOK.surface2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, geo.coreR, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = rgba(healthy ? 'good' : 'accent', healthy ? .5 : .32);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, geo.coreR, 0, TAU);
+  ctx.stroke();
+  ctx.fillStyle = rgba(coreKey, .8);
+  ctx.beginPath();
+  ctx.arc(cx, cy, Math.max(2.2, geo.coreR * 0.32), 0, TAU);
+  ctx.fill();
+
+  // ---- bodies
+  const pulse = ORB.reduced ? 1 : 0.55 + 0.45 * Math.sin(ORB.time * 3.4);
+  for (const project of ORB.list) {
+    const body = ORB.bodies.get(project.id);
+    if (!body) continue;
+    const radius = geo.radii[body.bandIndex] || geo.maxR;
+    const state = viewState(project);
+    const x = cx + Math.cos(body.angle) * radius;
+    const y = cy + Math.sin(body.angle) * radius;
+    body.x = x;
+    body.y = y;
+    body.state = state;
+
+    if (state === 'running') {
+      // A short trailing arc: eight fading segments swept behind the body.
+      const span = 0.34;
+      const steps = 8;
+      ctx.lineWidth = 1.6;
+      for (let i = 0; i < steps; i++) {
+        ctx.strokeStyle = rgba('accent', 0.30 * (1 - i / steps));
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, body.angle - span * (i + 1) / steps, body.angle - span * i / steps);
+        ctx.stroke();
+      }
+    }
+
+    let size = 3.4;
+    if (state === 'running') size = 5.8;
+    else if (state === 'unresponsive' || state === 'crashed') size = 4.8;
+    else if (state === 'held') size = 5.2;
+    else if (state === 'starting' || state === 'waking' || state === 'stopping') size = 4.2 + pulse * 1.4;
+    body.radius = size;
+
+    ctx.lineWidth = 1.4;
+    if (state === 'running') {
+      ctx.save();
+      ctx.shadowColor = rgba('accent', .9);
+      ctx.shadowBlur = 13;
+      ctx.fillStyle = TOK.accentLift;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    } else if (state === 'starting' || state === 'waking' || state === 'stopping') {
+      ctx.fillStyle = rgba('warn', 0.45 + pulse * 0.55);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+    } else if (state === 'unresponsive') {
+      ctx.fillStyle = rgba('warn', .92);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = rgba('warn', .3);          // a halo it is failing to fill
+      ctx.beginPath();
+      ctx.arc(x, y, size + 4, 0, TAU);
+      ctx.stroke();
+    } else if (state === 'held') {
+      // Outline only: the port is occupied, but not by us.
+      ctx.strokeStyle = rgba('warn', .85);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = rgba('warn', .3);
+      ctx.beginPath();
+      ctx.arc(x, y, size + 4.5, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else if (state === 'crashed') {
+      ctx.fillStyle = rgba('critical', .9);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+      // a broken ring: two arcs with the quarters missing, plus a small cross
+      ctx.strokeStyle = rgba('critical', .5);
+      ctx.setLineDash([]);
+      for (const start of [0.35, 3.5]) {
+        ctx.beginPath();
+        ctx.arc(x, y, size + 4.5, start, start + 1.5);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = rgba('bg', .85);
+      ctx.lineWidth = 1.3;
+      const arm = size * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x - arm, y - arm); ctx.lineTo(x + arm, y + arm);
+      ctx.moveTo(x + arm, y - arm); ctx.lineTo(x - arm, y + arm);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = rgba('muted', .5);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, TAU);
+      ctx.fill();
+    }
+
+    if (ORB.selected === project.id) {
+      ctx.strokeStyle = rgba('text', .55);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 7, 0, TAU);
+      ctx.stroke();
+    } else if (ORB.hover === project.id) {
+      ctx.strokeStyle = rgba('text2', .3);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 6, 0, TAU);
+      ctx.stroke();
+    }
+  }
+
+  // ---- labels, most important first; anything that would collide is dropped
+  ctx.font = '600 10px ' + ORB_FONT;
+  ctx.textBaseline = 'middle';
+  const ranked = ORB.list.slice().sort(function (a, b) {
+    return labelRank(b) - labelRank(a);
+  });
+  for (const project of ranked) {
+    const body = ORB.bodies.get(project.id);
+    if (!body || body.x === undefined) continue;
+    const selected = ORB.selected === project.id || ORB.hover === project.id;
+    if (small && !selected) continue;
+    const text = clipLabel(project.name || project.id);
+    const width = ctx.measureText(text).width;
+    const gap = (body.radius || 4) + 7;
+    let left = body.x >= cx ? body.x + gap : body.x - gap - width;
+    if (left < 4) left = body.x + gap;
+    if (left + width > ORB.w - 4) left = body.x - gap - width;
+    if (left < 4 || left + width > ORB.w - 4) continue;
+    const box = { x: left - 3, y: body.y - 7, w: width + 6, h: 14 };
+    if (box.y < 2 || box.y + box.h > ORB.h - 2) continue;
+    if (!selected && labelRects.some(function (rect) { return overlaps(rect, box); })) continue;
+    labelRects.push(box);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = selected ? TOK.text : rgba('muted', .92);
+    ctx.fillText(text, left, body.y);
+  }
+}
+function labelRank(project) {
+  if (ORB.selected === project.id) return 5;
+  if (ORB.hover === project.id) return 4;
+  const state = viewState(project);
+  if (state === 'running') return 3;
+  if (state === 'crashed' || state === 'unresponsive') return 2;
+  if (MOVING_STATES[state] === 1 || state === 'held') return 1;
+  return 0;
+}
+function clipLabel(name) {
+  const text = String(name);
+  return text.length > 16 ? text.slice(0, 15) + '…' : text;
+}
+function overlaps(a, b) {
+  return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+}
+
+/* ---- pointer, tooltip, selection panel ---- */
+
+function orbHitTest(x, y) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const project of ORB.list) {
+    const body = ORB.bodies.get(project.id);
+    if (!body || body.x === undefined) continue;
+    const distance = Math.hypot(x - body.x, y - body.y);
+    if (distance <= (body.radius || 4) + 11 && distance < bestDistance) {
+      bestDistance = distance;
+      best = body;
+    }
+  }
+  return best;
+}
+function orbShowTip(body) {
+  const tip = $('orbTip');
+  const project = currentProject(body.id);
+  const state = viewState(project);
+  const port = effectivePort(project);
+  const seconds = liveUptime(project);
+  const bits = [STATE_LABEL[state] || state];
+  if (port !== null) bits.push(':' + port);
+  if (seconds !== null) bits.push(fmtUptime(seconds));
+  tip.replaceChildren(
+    el('b', {}, project.name || project.id),
+    el('div', { class: 'tip-meta' }, bits.join('  ·  ')));
+  tip.style.left = Math.round(body.x) + 'px';
+  tip.style.top = Math.round(body.y - (body.radius || 4)) + 'px';
+  tip.hidden = false;
+}
+function orbHideTip() {
+  const tip = $('orbTip');
+  if (tip) tip.hidden = true;
+}
+function orbSelect(id) {
+  if (ORB.selected === id) { if (!id) return; }
+  ORB.selected = id;
+  orbRenderPanel(id ? currentProject(id) : null);
+  ORB.dirty = true;
+  orbKick();
+}
+function orbCycle(step) {
+  if (!ORB.list.length) return;
+  const ids = ORB.list.map(function (project) { return project.id; });
+  const at = ids.indexOf(ORB.selected);
+  const next = at === -1 ? 0 : (at + step + ids.length) % ids.length;
+  orbSelect(ids[next]);
+}
+function orbEnsurePanel() {
+  if (ORB.panel) return ORB.panel;
+  const get = function () { return ORB.selected ? currentProject(ORB.selected) : null; };
+  const parts = {
+    name: el('div', { class: 'panel-name' }),
+    dot: el('span', { class: 'status-dot', 'aria-hidden': 'true' }),
+    state: el('span', {}),
+    port: el('span', { class: 'mono' }),
+    uptime: el('span', { class: 'mono' }),
+    actions: makeActions(get),
+    tools: makeTools(get, 'panel-tools')
+  };
+  $('orbPanel').replaceChildren(
+    el('div', { class: 'panel-ident' }, parts.name,
+      el('div', { class: 'panel-sub' }, parts.dot, parts.state, parts.port, parts.uptime)),
+    el('span', { class: 'panel-spacer' }),
+    parts.tools.node,
+    parts.actions.node,
+    actionButton('Close', function () { orbSelect(null); }, 'btn btn-sm btn-ghost'));
+  ORB.panel = parts;
+  return parts;
+}
+function orbRenderPanel(project) {
+  const panel = $('orbPanel');
+  if (!project || activeView() !== 'orbital') {
+    panel.hidden = true;
+    document.body.classList.remove('panel-open');
+    return;
+  }
+  const parts = orbEnsurePanel();
+  const state = viewState(project);
+  const port = effectivePort(project);
+  parts.name.textContent = project.name || project.id;
+  parts.dot.className = 'status-dot ' + dotClass(state);
+  parts.state.textContent = STATE_LABEL[state] || state;
+  const seconds = liveUptime(project);
+  parts.port.textContent = port === null ? '' : '  ·  :' + port;
+  parts.uptime.textContent = seconds === null ? '' : '  ·  ' + fmtUptime(seconds);
+  parts.actions.update(project);
+  parts.tools.update(project);
+  panel.hidden = false;
+  document.body.classList.add('panel-open');
+}
+
+function renderOrbital() {
+  const section = $('orbital');
+  const on = activeView() === 'orbital';
+  if (!on) {
+    section.hidden = true;
+    orbStop();
+    orbHideTip();
+    orbRenderPanel(null);
+    return;
+  }
+  section.hidden = false;                 // measurable before anything sizes it
+  orbEnsure();
+  if (!ORB.ready) return;
+  orbResize();
+  orbLayout();
+  orbRenderPanel(ORB.selected ? currentProject(ORB.selected) : null);
+  ORB.canvas.setAttribute('aria-label',
+    'Orbital view: ' + ORB.list.length + ' projects, '
+    + ORB.list.filter(isHealthy).length + ' healthy. The grid view lists the same data as cards.');
+  orbKick();
+}
+
+/* --------------------------- polling --------------------------- */
+
+function scheduleStatus(immediate) {
+  if (statusTimer) clearTimeout(statusTimer);
+  if (S.quitting) return;
+  const delay = immediate ? 250 : (document.hidden ? POLL_STATUS_HIDDEN : POLL_STATUS);
+  statusTimer = setTimeout(async function () {
+    await loadProjects();
+    await refreshHealth();
+    scheduleStatus();
+  }, delay);
+}
+
+/* ----------------------------- boot ---------------------------- */
+
+document.addEventListener('DOMContentLoaded', function () {
+  readTokens();
+  try {
+    if (localStorage.getItem(VIEW_KEY) === 'orbital') S.view = 'orbital';
+  } catch (error) { /* private mode: the grid is a fine default */ }
+
+  $('search').addEventListener('input', function (event) {
+    S.filter = event.target.value;
+    render();
+  });
+  $('viewGrid').addEventListener('click', function () { setView('grid'); });
+  $('viewOrbital').addEventListener('click', function () { setView('orbital'); });
+  $('stopAllBtn').addEventListener('click', function (event) {
+    const count = S.projects.filter(function (project) { return isLive(stateOf(project)); }).length;
+    if (!count) return;
+    openConfirm(event.currentTarget.parentElement,
+      'Stop ' + count + (count === 1 ? ' running server?' : ' running servers?'),
+      'Stop all', stopAll);
+  });
+  $('quitBtn').addEventListener('click', function (event) {
+    const count = S.projects.filter(function (project) { return isLive(stateOf(project)); }).length;
+    openConfirm(event.currentTarget.parentElement,
+      count
+        ? 'Quit Orrery? The ' + count + (count === 1 ? ' server it started will be stopped.' : ' servers it started will be stopped.')
+        : 'Quit Orrery? The launcher closes; this page stays open.',
+      'Quit', quit);
+  });
+  $('drawerClose').addEventListener('click', closeDrawer);
+  $('followBtn').addEventListener('click', function () {
+    DRAWER.follow = !DRAWER.follow;
+    if (DRAWER.follow) { const body = $('logBody'); body.scrollTop = body.scrollHeight; $('jumpBtn').hidden = true; }
+    renderDrawerHead();
+  });
+  $('jumpBtn').addEventListener('click', function () {
+    const body = $('logBody');
+    DRAWER.follow = true;
+    body.scrollTop = body.scrollHeight;
+    $('jumpBtn').hidden = true;
+    renderDrawerHead();
+  });
+  $('copyLogsBtn').addEventListener('click', function () {
+    const button = $('copyLogsBtn');
+    navigator.clipboard.writeText($('logBody').textContent).then(function () {
+      button.textContent = 'Copied';
+      setTimeout(function () { button.textContent = 'Copy'; }, 1200);
+    }).catch(function (error) { showError('Copy failed: ' + error.message); });
+  });
+  $('logBody').addEventListener('scroll', function (event) {
+    const body = event.currentTarget;
+    const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 26;
+    if (!atBottom && DRAWER.follow) { DRAWER.follow = false; renderDrawerHead(); }
+    if (atBottom && !DRAWER.follow) { DRAWER.follow = true; renderDrawerHead(); }
+    $('jumpBtn').hidden = atBottom;
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      if (confirmNode) { closeConfirm(); return; }
+      if (DRAWER.id) { closeDrawer(); return; }
+      if (ORB.selected) { orbSelect(null); return; }
+    }
+    if (event.key === '/' && !isTypingTarget()) {
+      event.preventDefault();
+      $('search').focus();
+      $('search').select();
+    }
+    if (activeView() !== 'orbital' || isTypingTarget()) return;
+    // These keys start and stop real dev servers, so they belong to the canvas
+    // and not to the document. Anything else with focus — the log drawer's
+    // <pre>, a button, or plain <body>, where Space means page-down — keeps its
+    // own keystroke. Scoped by focus rather than by tag name because the list of
+    // things that are not the canvas is not enumerable: the drawer's log body
+    // and document.body both fell straight through a BUTTON/A exemption, and an
+    // ArrowDown aimed at the log then silently moved the selection while Space
+    // launched whatever it had landed on.
+    const canvas = ORB.canvas;
+    if (!canvas || !(document.activeElement === canvas || canvas.contains(document.activeElement))) return;
+    // The drawer owns the bottom of the screen and the CSS hides the selection
+    // panel underneath it, so while it is open there is nothing on screen saying
+    // which project is armed. An invisible selection is never actionable.
+    if (DRAWER.id) return;
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      // Only ever a selection the panel is actually showing.
+      if (!ORB.selected || $('orbPanel').hidden) return;
+      event.preventDefault();
+      const project = currentProject(ORB.selected);
+      act(project, isLive(stateOf(project)) ? 'stop' : 'start');
+      return;
+    }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { event.preventDefault(); orbCycle(1); }
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { event.preventDefault(); orbCycle(-1); }
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    document.body.classList.toggle('tab-hidden', document.hidden);
+    if (!document.hidden) {
+      scheduleStatus(true);
+      if (DRAWER.id) restartLogPolling();
+      orbKick();
+    } else {
+      scheduleStatus();
+      orbStop();          // no frames at all behind another window
+    }
+  });
+
+  refreshHealth(true);
+  probeOpenTargets();
+  loadProjects().then(function () { scheduleStatus(); });
+  uptimeTimer = setInterval(tickUptimes, 1000);
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "$schema": "./schema.json",
-  "generated_at": "2026-08-16T23:23:37Z",
+  "generated_at": "2026-08-17T01:29:02Z",
   "person": {
     "name": "Mohammad Abu Daqer",
     "also_written": "Mohammad Abu Dagar",
@@ -203,8 +203,8 @@
       "dev": {
         "dir": "JobFinder",
         "command": "uv run jfb web serve",
-        "port": 8000,
-        "url": "http://localhost:8000",
+        "port": 3006,
+        "url": "http://localhost:3006",
         "kind": "python",
         "port_arg": "--port",
         "ready_pattern": "(?i)running on http",
@@ -252,8 +252,8 @@
       "dev": {
         "dir": "liminality",
         "command": "npm run dev",
-        "port": 5173,
-        "url": "http://localhost:5173",
+        "port": 3003,
+        "url": "http://localhost:3003",
         "kind": "node",
         "port_arg": "--port",
         "ready_pattern": "(?i)ready in|local: *http"
@@ -305,8 +305,8 @@
       "dev": {
         "dir": "complere",
         "command": "npm run dev",
-        "port": 3000,
-        "url": "http://localhost:3000",
+        "port": 3001,
+        "url": "http://localhost:3001",
         "kind": "node",
         "port_env": "PORT",
         "port_arg": "--port",
@@ -441,8 +441,8 @@
       "dev": {
         "dir": "Parasitic_muse",
         "command": "npm run start",
-        "port": 5173,
-        "url": "http://localhost:5173",
+        "port": 3005,
+        "url": "http://localhost:3005",
         "kind": "node",
         "port_env": "PORT",
         "ready_pattern": "(?i)running at http"
@@ -486,8 +486,8 @@
       "dev": {
         "dir": "OurSpace",
         "command": "pnpm dev",
-        "port": 5173,
-        "url": "http://localhost:5173",
+        "port": 3004,
+        "url": "http://localhost:3004",
         "kind": "node",
         "port_env": "PORT",
         "ready_pattern": "(?i)ready in|local: *http",
@@ -862,8 +862,8 @@
       "dev": {
         "dir": "VapeMaxxx",
         "command": "npm run dev",
-        "port": 3000,
-        "url": "http://localhost:3000",
+        "port": 3002,
+        "url": "http://localhost:3002",
         "kind": "node",
         "port_env": "PORT",
         "port_arg": "--port",

@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Orrery: the only machine-specific file, and the launcher's runtime state.
+# This repository is public — absolute paths never get committed.
+launcher/launcher.local.json
+launcher/state/

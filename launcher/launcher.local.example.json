@@ -1,0 +1,93 @@
+{
+  "_readme": [
+    "Copy this file to launcher.local.json (same folder) and edit it.",
+    "launcher.local.json is git-ignored on purpose: this repository is public, and",
+    "the only machine-specific fact Orrery needs is where your projects live.",
+    "Everything else about a project - its directory NAME, command, and port - is",
+    "portable and lives in the dev block in ../projects.json.",
+    "Every key below is optional. Delete the ones you do not need.",
+    "The two optional sections ship under _example_ names so that copying this",
+    "file verbatim changes nothing: rename the key to activate the section."
+  ],
+
+  "_projects_root": [
+    "The folder that CONTAINS your project folders. Orrery joins each project's",
+    "dev.dir onto it, so with the value below it looks for the liminality project",
+    "in C:/Users/you/Desktop/Projects/liminality.",
+    "Resolution order: the ORRERY_ROOT environment variable wins, then this key,",
+    "then the parent of this repository (which is right for the usual layout, so",
+    "most of the time you need no local file at all).",
+    "Forward slashes work fine on Windows; backslashes must be doubled in JSON.",
+    "Leave this pointing at a folder that does not exist and Orrery says so on",
+    "the board rather than pretending - but edit it, that is the point of the file."
+  ],
+  "projects_root": "C:/Users/you/Desktop/Projects",
+
+  "_project_dirs": [
+    "Escape hatch for a project that does not live under projects_root.",
+    "Keyed by project id (the id field in projects.json), the value is an",
+    "absolute path to that project's folder. Overrides dev.dir for that project.",
+    "Rename the key below to \"project_dirs\" to switch it on. A wrong path here",
+    "is reported on the card, not hidden - but an unedited example pointing at a",
+    "drive you do not have is still noise nobody asked for."
+  ],
+  "_example_project_dirs": {
+    "job-radar": "D:/work/bounties"
+  },
+
+  "_disabled": [
+    "Project ids to hide from this machine's launcher. They stay in projects.json",
+    "and on every other machine; they just do not appear as cards here.",
+    "Rename the key below to \"disabled\" to switch it on. Whatever is listed is",
+    "named in /api/health and on the board, so a hidden project is never a",
+    "silently missing one."
+  ],
+  "_example_disabled": ["vapemaxxx"],
+
+  "_local_projects": [
+    "Projects that exist only on this machine and must never appear in the",
+    "public repository: client work under NDA, anything where the folder name",
+    "and the run command are themselves the disclosure.",
+    "Each entry is shaped exactly like a projects.json entry - an id, a name,",
+    "an optional tagline and lanes, and a dev block - and once loaded it is",
+    "treated like any other project: start, stop, health, git status, the open",
+    "buttons and context all work the same. Cards are badged 'local'.",
+    "An id already in projects.json is skipped rather than overriding it, so a",
+    "git-ignored file can never silently contradict published data.",
+    "Rename the key below to \"local_projects\" to switch it on."
+  ],
+  "_example_local_projects": [
+    {
+      "id": "some-client-project",
+      "name": "Client project",
+      "tagline": "Not in the public dataset",
+      "lanes": ["fullstack"],
+      "dev": {
+        "dir": "some-client-project",
+        "command": "npm run dev",
+        "port": 3100,
+        "url": "http://localhost:3100",
+        "kind": "node"
+      }
+    }
+  ],
+
+  "_open_commands": [
+    "The \"Open in\" buttons - Code, Cursor, Claude, Folder - find their",
+    "executables on PATH with shutil.which, so on a normal install you need",
+    "nothing here. This is the escape hatch for a tool installed somewhere PATH",
+    "does not reach: the value is the command to run, either a bare name to look",
+    "up or a full path to the executable itself.",
+    "Keys: vscode, cursor, claude, folder, and \"terminal\" for the terminal the",
+    "claude button opens in (Windows Terminal, wt, by default; without it the",
+    "CLI opens in a plain console window instead).",
+    "Rename the key below to \"open_commands\" to switch it on. A target that",
+    "cannot be resolved answers 409 with the reason and its button is disabled",
+    "on the board - it never fails silently. Absolute paths belong HERE, in this",
+    "git-ignored file, and never in projects.json or orrery.py."
+  ],
+  "_example_open_commands": {
+    "claude": "C:/Users/you/.local/bin/claude.exe",
+    "terminal": "wt"
+  }
+}
