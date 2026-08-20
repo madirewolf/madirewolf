@@ -110,6 +110,58 @@ After editing `projects.json`, run `python build.py` so the generated files stay
 
 ---
 
+## A project that is not in the dataset yet
+
+The section above assumes the project already has an entry in `projects.json`. A brand new one does
+not, so it needs the entry first. Two paths, and the choice is only ever "should this be public":
+
+**Public** — it belongs in the portfolio. Add a full entry to `projects.json`, then a `dev` block on
+it. Minimum viable entry:
+
+```json
+{
+  "id": "kebab-case-slug",
+  "name": "Display Name",
+  "tagline": "One line, under 90 characters",
+  "lanes": ["fullstack"],
+  "role": "sole author",
+  "period": "2026",
+  "technologies": ["TypeScript", "Next.js"],
+  "visibility": "public",
+  "links": {},
+  "highlights": [],
+  "featured": false,
+  "dev": { "dir": "folder-name", "command": "npm run dev", "port": 3007,
+           "url": "http://localhost:3007", "kind": "node" }
+}
+```
+
+It will render on the GitHub profile and in `llms.txt`, so write the tagline like a human will read
+it. Run `python build.py` afterwards. Leave `metrics` out unless the numbers were actually measured.
+
+**Local only** — client work, anything under NDA, or a scratch project with no business being
+published. Add it to `local_projects` in `launcher/launcher.local.json`, which git ignores. Same
+shape, minus the portfolio fields:
+
+```json
+{ "id": "slug", "name": "Display Name", "lanes": ["fullstack"],
+  "dev": { "dir": "folder-name", "command": "npm run dev", "port": 3102,
+           "url": "http://localhost:3102", "kind": "node" } }
+```
+
+Nothing about it reaches the public repository, and its card is badged `local`.
+
+**Picking a port.** The dataset uses one contiguous block: 3000 to 3006 are taken, so a new public
+project takes 3007, then 3008. Local-only projects start at 3100. The job radar keeps 8765 because a
+scheduled task points at it. Take the next free number rather than whatever the framework defaults
+to, so every port on the board is guessable.
+
+**Finding the command.** Read the project rather than assuming: `scripts.dev` or `scripts.start` in
+`package.json` for node, the Makefile or the CLI entry point for python. Set `kind` to match, since
+it decides whether a relocated port is passed as a `PORT=` env var or a `--port` flag.
+
+---
+
 ## Ports are the interesting part
 
 Every launchable project now owns its own port — one contiguous block, `3000`–`3006` plus `8765`
